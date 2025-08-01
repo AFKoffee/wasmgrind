@@ -1,0 +1,85 @@
+use std::sync::Arc;
+
+use js_sys::{
+    JsString, Object, Reflect,
+    WebAssembly::{Memory, Module},
+};
+use wasm_bindgen::{JsError, JsValue};
+
+use crate::{closures::ThreadlinkClosures, coms::ThreadlinkComs, tmgmt::SyncedJsTmgmt};
+
+pub struct ThreadlinkContext {
+    module: Module,
+    memory: Memory,
+    thread_id: Option<u32>,
+    closures: ThreadlinkClosures,
+    tmgmt: Arc<SyncedJsTmgmt>,
+}
+
+impl ThreadlinkContext {
+    fn get_env_imports(&self) -> Result<Object, JsValue> {
+        let imports = Object::new();
+
+        Reflect::set(&imports, &JsString::from("memory"), &self.memory)?;
+
+        Ok(imports)
+    }
+}
+
+impl ThreadlinkContext {
+    pub fn new(
+        module: Module,
+        memory: Memory,
+        thread_id: Option<u32>,
+        coms: ThreadlinkComs,
+    ) -> Result<Self, JsValue> {
+        let tmgmt = coms.receive().map_err(|e| JsError::from(&*e))?;
+
+        if let Some(tid) = thread_id {
+            // This only happens for workers
+            wasmgrind_core::tmgmt::set_thread_id(tid).map_err(|e| JsError::from(&*e))?
+        };
+
+        let closures = ThreadlinkClosures::new(&memory, &module, tmgmt.clone())?;
+
+        Ok(Self {
+            module,
+            memory,
+            thread_id,
+            closures,
+            tmgmt,
+        })
+    }
+
+    pub fn get_target_module(&self) -> Module {
+        self.module.clone()
+    }
+
+    pub fn get_wasm_imports(&self) -> Result<Object, JsValue> {
+        let imports = Object::new();
+
+        Reflect::set(
+            &imports,
+            &JsString::from("env"),
+            &self.get_env_imports()?.into(),
+        )?;
+        Reflect::set(
+            &imports,
+            &JsString::from("wasm_threadlink"),
+            &self.closures.get_wasm_threadlink_imports()?.into(),
+        )?;
+
+        Ok(imports)
+    }
+
+    pub fn close(self) -> Result<(), JsError> {
+        if let Some(tid) = self.thread_id {
+            // Signal that the worker is finished
+            self.tmgmt.set_return_val(tid, 0)
+        } else {
+            // In this case we are on the main thread,
+            // which will never appear in thread management
+            Ok(())
+        }
+    }
+}

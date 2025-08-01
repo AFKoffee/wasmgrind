@@ -1,0 +1,9 @@
+# Alloc Exposer
+This crate is a simple utility crate that aims to expose memory management functions in the final WebAssembly binary, namely:
+- `__wasmgrind_malloc`: Takes a `size` in bytes and a byte alignment `align`. Returns the pointer to a newly allocated memory block of the given size and alignment.
+- `__wasmgrind_realloc`: Takes a `ptr` to an existing memory block with size `old_size` and reallocates the memory to size `new_size` with alignment `align` and returns a pointer to the new memory block.
+- `__wasmgrind_free`: Takes a `ptr` to an existing memory block, its `size` in bytes and its byte alignment `align`. Frees the specified memory block.
+
+All the above functions use the global allocator as configured for the Rust standard library. This prevents the need to include an additional allocator just to enable wasm-threadify to allocate thread local storage and stack space - at least when compiling pure Rust crates that only use the standard library allocator.
+
+The code for this crate is taken from the [wasm-bindgen](https://github.com/rustwasm/wasm-bindgen) tool and suffers from the same linking issues. These issues can prevent the above symbols from being exported if no Rust code in the binary uses them, which makes them essentially dead code in the eyes of the linker. This induces the need to insert a call to an _empty_ function `link_mem_intrinsics` in any library that aims to expose the allocator functions such that the linker includes the corresponding object file, which also contains the function symbols to export. For further details refer to the [wasm-bindgen source code](https://github.com/rustwasm/wasm-bindgen/blob/c35cc9369d5e0dc418986f7811a0dd702fb33ef9/src/rt/mod.rs#L492-L524).

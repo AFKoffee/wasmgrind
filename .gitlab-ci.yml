@@ -1,0 +1,27 @@
+# The Docker image that will be used to build your app
+image: rust:1.86
+create-pages:
+  pages:
+    # The folder that contains the files to be exposed at the Page URL
+    publish: public
+  only:
+    # This ensures that only commits to the main branch trigger
+    # page build and that the source OR book files actually changed
+    changes:
+      - 'book/**/*'
+      - 'crates/**/*'
+      - 'src/**/*'
+      - 'Cargo.toml'
+      - 'Cargo.lock'
+    refs:
+      - main
+  # Functions that should be executed before the build script is run
+  before_script:
+    - mkdir public
+    - cargo install mdbook
+    - cargo build --workspace --release
+  script:
+    - cargo doc --workspace --release
+    - mv target/doc public/docs
+    - cd book
+    - mdbook build -d ../public/book

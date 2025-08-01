@@ -1,0 +1,5 @@
+# Wasmgrind Core
+The wasmgrind-core crate bundles essential functionality for wasmgrind, which is independent of the host platform. The library can be used either in web contexts or on native systems. The provided utilities can be split into three groups:
+- [Thread Management Utilites](./wasmgrind_core/thread_management.md): Mechanisms that are essential to extend existing runtimes with capabilities manage threads. E.g., creation of unique thread-id's.
+- [Binary Instrumentation for Tracing](./wasmgrind_core/wasm_instrumentation.md): A wrapper around a patched version of [wasabi](https://github.com/AFKoffee/wasabi/tree/embedder-agnostic-api). This tool patches the parts of the WebAssembly module, which are relevant to perform execution tracing for deadlock detection.
+- [Other Useful Wrappers](./wasmgrind_core/other_wrappers.md): Wrappers around other library functions. E.g., functions of the wasm-threadify crate.

@@ -1,0 +1,5 @@
+[book]
+authors = ["AFKoffee"]
+language = "en"
+src = "src"
+title = "Wasmgrind Book"

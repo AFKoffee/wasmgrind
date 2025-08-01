@@ -1,0 +1,33 @@
+[workspace]
+members = [ 
+    "crates/alloc-exposer", 
+    "crates/race-detection",
+    "crates/wasm-threadify",
+    "crates/wasm-threadlink",
+    "crates/wasmgrind-core", 
+    "crates/wasmgrind-js", 
+    "crates/wasmgrind-error",
+    "crates/wasmgrind-macros",
+]
+
+[package]
+name = "wasmgrind"
+version = "0.1.0"
+authors = ["Michael Staab <afkoffee@protonmail.com>"]
+license = "MIT or Apache-2.0"
+edition = "2024"
+
+[dependencies]
+anyhow = "1.0.98"
+race-detection = { path = "crates/race-detection" }
+wasmgrind-core = { path = "crates/wasmgrind-core" }
+wasmgrind-error = { path = "crates/wasmgrind-error" }
+wasmgrind-macros = { path = "crates/wasmgrind-macros" }
+wasmtime = "33.0.0"
+clap = { version = "4.5.38", features = ["derive"] }
+
+[dev-dependencies]
+tempfile = "3.20.0"
+
+[build-dependencies]
+glob = "0.3.2"

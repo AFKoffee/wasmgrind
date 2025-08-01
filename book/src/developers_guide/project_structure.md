@@ -1,0 +1,40 @@
+# Project Structure
+The Wasmgrind project is split into several Rust crates serving different purposes. The following sections give an overview of the repository structure.
+
+## Crates
+All crates related to Wasmgrind are located under the `crates` folder except the native wasmgrind engine which is located at the project root.
+
+### Wasm-Threadify
+The _wasm-threadify_ crate is located under `crates/wasm-threadify` and provides utilities to extract metadata from WebAssembly binaries and to prepare them for multithreading with Wasmgrind.
+
+### Wasm-Threadlink
+The _wasm-threadlink_ crate is located under `crates/wasm-threadlink` and defines the internal runtime API as well as providing a Rust wrapper around it. 
+
+The Rust interface it provides mimicks the threading interface that is exposed by the Rust standard library. Furthermore, it provides special mutex structs that incorporate tracing capabilites for usage with Wasmgrind.
+
+### Alloc Exposer
+The _alloc-exposer_ crate is located under `crates/alloc-exposer` and acts as a simple helper crate that is crucial for _wasm-threadify_ to work properly. It makes sure that functions to allocate and deallocate memory are exposed by the compiled binary, which in turn are used by _wasm-threadify_ to allocate TLS and stack spaces for new threads.
+
+### Race Detection
+Everything related to execution tracing and concurrency analysis inside Wasmgrind is handled by the _race-detection_ crate. It is located under `crates/race-detection`.
+
+### Wasmgrind Core
+The _wasmgrind-core_ crate bundles essential functionality for Wasmgrind that is used by both the native and the web-based wasmgrind engine. It is located under `crates/wasmgrind-core`.
+
+### Wasmgrind Error
+Everything related to errors inside Wasmgrind is handled by the _wasmgrind-error_ crate. It provides static error codes, error descriptions, etc. It is located under `crates/wasmgrind-error`.
+
+### Wasmgrind JS
+The `crates/wasmgrind-js` folder contains files to the web-based wasmgrind engine. This project should be seen as a proof of concept on how Wasmgrind can be used inside Browsers but it is currently unergonomic to use and less flexible than the native engine.
+
+### Wasmgrind Macros
+The _wasmgrind-macros_ crate in foler `crates/wasmgrind-macros` contains procedural macros that are used inside the native wasmgrind engine. The only reason why those macros reside in a separate crate is that Rust does not allow combining procedural macros with source code. Nevertheless, the macros in this crate are tightly coupled with the code in the _wasmgrind_ crate and both crates should be considered a single entity.
+
+### Wasmgrind
+The `wasmgrind` crate is located at the root of the repository and represents the main crate of the project. It contains the native wasmgrind engine, which relies on functionality from nearly all of the above crates.
+
+## Examples
+Examples on how to use the _wasm-threadlink_ library can be found in folder `examples`.
+
+## Documentation
+The `docs` folder contains the files that are used to generate this documentation.

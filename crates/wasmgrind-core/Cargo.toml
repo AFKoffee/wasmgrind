@@ -1,0 +1,13 @@
+[package]
+name = "wasmgrind-core"
+version = "0.1.0"
+authors = ["Michael Staab <afkoffee@protonmail.com>"]
+license = "MIT or Apache-2.0"
+edition = "2024"
+
+[dependencies]
+anyhow = "1.0.98"
+walrus = "0.23.3"
+wasabi = { git = "https://github.com/AFKoffee/wasabi.git", branch = "embedder-agnostic-api" }
+wasabi_wasm = { git = "https://github.com/AFKoffee/wasabi.git", branch = "embedder-agnostic-api" }
+wasm-threadify = { path = "../wasm-threadify" }

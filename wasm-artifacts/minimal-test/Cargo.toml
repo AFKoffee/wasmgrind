@@ -1,0 +1,13 @@
+[package]
+name = "minimal-test"
+version = "0.1.0"
+edition = "2024"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[features]
+tracing = ["wasm-threadlink/tracing"]
+
+[dependencies]
+wasm-threadlink = { path = "../../crates/wasm-threadlink" }
