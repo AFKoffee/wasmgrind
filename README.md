@@ -39,7 +39,7 @@ The following sections describe how to get up and running with wasmgrind quickly
 ### Compiling Binaries for Wasmgrind
 Wasmgrind assumes that the provided WebAssembly binary imports a set of API functions needed to create and join threads as well as to record important events for tracing.  Currently, the only two ways to utilize this API is to either use the [wasm-threadlink](crates/wasm-threadlink/) crate in your project or to wrap the internal API using your own code. 
 
-View the projects in the [examples](examples) folder to see how the _wasm-threadlink_ library functions can be used to create and join threads from Rust code in a way that mimics the Rust standard library threading API.
+View the projects in the [wasm-artifacts](wasm-artifacts) folder to see how the _wasm-threadlink_ library functions can be used to create and join threads from Rust code in a way that mimics the Rust standard library threading API.
 
 **Note:** Wasmgrind assumes that the WebAssembly binary has beed compiled with the `atomics` feature enabled, which requires a nightly Rust toolchain at the time of this writing. Otherwise, the module can not utilize atomic instructions and shared memory that are the fundamental building blocks of multithreaded WebAssembly.
 
