@@ -31,4 +31,4 @@ Emits the WebAssembly binary into a `tmp` folder (creating it if necessary) afte
 ## Wasmgrind as a Library
 If the WebAssembly binary to be examined depends on custom function imports, you have to use Wasmgrind as a library and embedd it into your project. This gives you control over additional imports that should be present upon instantiating your module.
 
-For usage instructions with regard to the Rust library API, refer to the [wasmgrind docs.rs](https://wasmgrind-a64c5a.gitlab.io/docs/wasmgrind/) site.
+For usage instructions with regard to the Rust library API, refer to the [wasmgrind docs.rs](https://wasmgrind-d6f2b1.gitlab.io/docs/wasmgrind/) site.

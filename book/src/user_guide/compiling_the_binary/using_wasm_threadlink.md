@@ -1,5 +1,5 @@
 # Using Wasm-Threadlink
-The _wasm-threadlink_ Rust library offers an ideomatic way of accessing the internal runtime API of Wasmgrind from Rust program. It provides two main utilities: a modified mutex structure, which enables tracing of lock events, and functions for thread creation and joining. Refer to [docs.rs](https://wasmgrind-a64c5a.gitlab.io/docs/wasmgrind/) for a more detailed API documentation.
+The _wasm-threadlink_ Rust library offers an ideomatic way of accessing the internal runtime API of Wasmgrind from Rust program. It provides two main utilities: a modified mutex structure, which enables tracing of lock events, and functions for thread creation and joining. Refer to [docs.rs](https://wasmgrind-d6f2b1.gitlab.io/docs/wasmgrind/) for a more detailed API documentation.
 
 **Note:** If the `tracing` feature of the crate is enabled, it wraps the _tracing extended_ internal runtime API. Otherwise, it just wraps the _standalone_ internal runtime API.
 

@@ -8,7 +8,7 @@
 //! be used only in binaries that will be compiled to WebAssembly and processed by 
 //! [`wasm-threadify`] afterwards.
 //! 
-//! [`wasm-threadify`]: https://wasmgrind-a64c5a.gitlab.io/docs/wasm_threadify/index.html
+//! [`wasm-threadify`]: https://wasmgrind-d6f2b1.gitlab.io/docs/wasm_threadify/index.html
 
 /*
 * The code in this file is mainly based on and taken from the wasm-bindgen tool:

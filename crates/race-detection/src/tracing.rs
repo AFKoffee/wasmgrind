@@ -57,7 +57,7 @@ impl Tracing {
     ///
     /// This method will lock the internal execution trace
     /// iterates over all collected events and creates a binary trace in
-    /// [RapidBin](https://wasmgrind-a64c5a.gitlab.io/book/developers_guide/race_detection/rapid_bin.html)
+    /// [RapidBin](https://wasmgrind-d6f2b1.gitlab.io/book/developers_guide/race_detection/rapid_bin.html)
     /// format.
     ///
     /// # Errors

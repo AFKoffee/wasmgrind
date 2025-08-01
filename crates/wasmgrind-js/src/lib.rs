@@ -53,7 +53,7 @@ extern "C" {
 ///
 /// The `binary` argument should be an URL to a valid WebAssembly module in binary format, which
 /// was compiled against the _tracing-extended_ Wasmgrind ABI. For details refer to the
-/// [Wasmgrind Book](https://wasmgrind-a64c5a.gitlab.io/book/user_guide/compiling_the_binary.html).
+/// [Wasmgrind Book](https://wasmgrind-d6f2b1.gitlab.io/book/user_guide/compiling_the_binary.html).
 ///
 /// # Errors
 /// The function will fail if the provided WebAssembly binary could not be patched or instrumented
@@ -94,7 +94,7 @@ pub async fn grind(binary: Url, function_name: JsString) -> Result<JsValue, JsVa
 ///
 /// The `binary` argument should be an URL to a valid WebAssembly module in binary format, which
 /// was compiled against the _standalone_ Wasmgrind ABI. For details refer to the
-/// [Wasmgrind Book](https://wasmgrind-a64c5a.gitlab.io/book/user_guide/compiling_the_binary.html).
+/// [Wasmgrind Book](https://wasmgrind-d6f2b1.gitlab.io/book/user_guide/compiling_the_binary.html).
 ///
 /// # Errors
 /// The function will fail if the provided WebAssembly binary could not be patched for any reason.

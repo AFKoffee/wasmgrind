@@ -2,7 +2,7 @@
 
 Wasmgrind is an analysis framework for multi-threaded WebAssembly programs.
 
-It provides a language agnostice runtime API to enable basic thread management from within WebAssembly, the ability to execute WebAssembly programs compiled against this API as well as tracing capabilities to track events related to concurrency during program runs.
+It provides an embedder-agnostic runtime API to enable basic thread management from within WebAssembly, the ability to execute WebAssembly programs compiled against this API as well as tracing capabilities to track events related to concurrency during program runs.
 
 The ultimate goal of this tool is to enable the analysis of concurrent WebAssembly programs in order to detect deadlocks or dataraces.
 
@@ -34,7 +34,7 @@ Otherwise install it:
     cargo install wasm-pack
 
 ## Quick Start Guide
-The following sections describe how to get up and running with wasmgrind quickly. For more in-depth explainations refer to the [Wasmgrind Book](https://wasmgrind-a64c5a.gitlab.io/book/).
+The following sections describe how to get up and running with wasmgrind quickly. For more in-depth explainations refer to the [Wasmgrind Book](https://wasmgrind-d6f2b1.gitlab.io/book/).
 
 ### Compiling Binaries for Wasmgrind
 Wasmgrind assumes that the provided WebAssembly binary imports a set of API functions needed to create and join threads as well as to record important events for tracing.  Currently, the only two ways to utilize this API is to either use the [wasm-threadlink](crates/wasm-threadlink/) crate in your project or to wrap the internal API using your own code. 

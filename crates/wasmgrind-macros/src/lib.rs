@@ -14,7 +14,7 @@ mod thread_join;
 /// 3. a [`wasmtime::SharedMemory`](https://docs.rs/wasmtime/33.0.0/wasmtime/struct.SharedMemory.html)
 /// 4. a [`wasmtime::Linker`](https://docs.rs/wasmtime/33.0.0/wasmtime/struct.Linker.html)
 /// 5. a `wasmtime::runtime::Tmgmt` (internal thread management of wasmgrind)
-/// 6. Optional: a [`race_detection::Tracing`](https://wasmgrind-a64c5a.gitlab.io/docs/race_detection/struct.Tracing.html)
+/// 6. Optional: a [`race_detection::Tracing`](https://wasmgrind-d6f2b1.gitlab.io/docs/race_detection/struct.Tracing.html)
 ///    wrapped in a [`std::sync::Arc`].
 /// 
 /// The returned Rust closure implements the `thread_create` function of the internal runtime ABI.
@@ -29,7 +29,7 @@ pub fn thread_create_func(input: TokenStream) -> TokenStream {
 /// 
 /// This macro accepts 1 required and 1 optional argument:
 /// 1. a `wasmtime::runtime::Tmgmt` (internal thread management of wasmgrind)
-/// 2. Optional: a [`race_detection::Tracing`](https://wasmgrind-a64c5a.gitlab.io/docs/race_detection/struct.Tracing.html) 
+/// 2. Optional: a [`race_detection::Tracing`](https://wasmgrind-d6f2b1.gitlab.io/docs/race_detection/struct.Tracing.html) 
 ///    wrapped in a [`std::sync::Arc`].
 /// 
 /// The returned Rust closure implements the `thread_create` function of the internal runtime ABI.

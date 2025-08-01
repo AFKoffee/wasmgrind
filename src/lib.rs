@@ -52,7 +52,7 @@ fn patch_binary<P: AsRef<Path>>(binary: P, emit_patched: bool) -> Result<Vec<u8>
 ///
 /// The `binary` argument should be a path to a valid WebAssembly module in binary format, which
 /// was compiled against the _tracing-extended_ Wasmgrind ABI. For details refer to the
-/// [Wasmgrind Book](https://wasmgrind-a64c5a.gitlab.io/book/user_guide/compiling_the_binary.html).
+/// [Wasmgrind Book](https://wasmgrind-d6f2b1.gitlab.io/book/user_guide/compiling_the_binary.html).
 ///
 /// If the `emit_patched` flag is set to `true`, the state of the WebAssembly module after
 /// patching will be emitted to a `tmp` folder relative to the current working directory.
@@ -157,7 +157,7 @@ pub fn grind<P: AsRef<Path>>(
 ///
 /// The `binary` argument should be a path to a valid WebAssembly module in binary format, which
 /// was compiled against the _standalone_ Wasmgrind ABI. For details refer to the
-/// [Wasmgrind Book](https://wasmgrind-a64c5a.gitlab.io/book/user_guide/compiling_the_binary.html).
+/// [Wasmgrind Book](https://wasmgrind-d6f2b1.gitlab.io/book/user_guide/compiling_the_binary.html).
 ///
 /// If the `emit_patched` flag is set to `true`, the state of the WebAssembly module after
 /// patching will be emitted to a `tmp` folder relative to the current working directory.
