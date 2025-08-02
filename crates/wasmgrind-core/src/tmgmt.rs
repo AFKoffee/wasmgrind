@@ -2,7 +2,7 @@ use std::{
     cell::Cell,
     sync::{
         Condvar, Mutex,
-        atomic::{AtomicBool, AtomicU32, Ordering},
+        atomic::{AtomicU32, Ordering},
     },
 };
 
@@ -10,7 +10,7 @@ use anyhow::{Error, anyhow, bail};
 
 
 static THREAD_COUNTER: AtomicU32 = AtomicU32::new(0);
-static MAIN_INITIALIZED: AtomicBool = AtomicBool::new(false);
+// static MAIN_INITIALIZED: AtomicBool = AtomicBool::new(false);
 
 thread_local! {
     static THREAD_ID: Cell<Option<u32>> = const { Cell::new(None) }
@@ -28,25 +28,22 @@ pub fn next_available_thread_id() -> u32 {
 /// Retrieves the thread-id of the current thread
 /// 
 /// The thread-id must have been set beforehand
-/// by the [`set_thread_id`] function. The **only exception**
-/// from this rule is the main thread, for whom the thread-id
-/// is generated upon first access. Therefore, this function
-/// is allowed to be called **once** amongst all threads
-/// without having a thread-id set.
+/// by the [`set_thread_id`] function.
 /// 
 /// # Errors
 /// 
 /// This function may fail in the following cases:
 /// - The thread-local storage, where the thread-id resides
 ///   can not be accessed.
-/// - The function is called the second time whithout having
+/// - The function is called whithout having
 ///   a thread-id set beforehand
 pub fn thread_id() -> Result<u32, Error> {
     THREAD_ID.try_with(|maybe_thread_id| {
         if let Some(thread_id) = maybe_thread_id.get() {
             Ok(thread_id)
         } else {
-            if MAIN_INITIALIZED.load(Ordering::SeqCst) {
+            bail!("Error: Thread-ID has not been initialized!")
+            /*if MAIN_INITIALIZED.load(Ordering::SeqCst) {
                 bail!("Error: Main thread initialized twice.")
             }
 
@@ -57,7 +54,7 @@ pub fn thread_id() -> Result<u32, Error> {
 
             // println!("INFO: Initialized main thread id with {thread_id}");
 
-            Ok(thread_id)
+            Ok(thread_id)*/
         }
     })? // .expect("Error: Could not access thread-local thread id.")
 }

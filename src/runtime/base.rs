@@ -76,7 +76,10 @@ impl ThreadlinkRuntime {
         let module = self.module.clone();
         let linker = self.linker.clone();
         thread::spawn(move || {
-            let _ = wasmgrind_core::tmgmt::thread_id();
+            // Generate and set the thread-id for
+            // the main execution context of this function invocation
+            let tid = wasmgrind_core::tmgmt::next_available_thread_id();
+            wasmgrind_core::tmgmt::set_thread_id(tid)?;
 
             let mut store = Store::new(&engine, ());
             let instance = match linker.read() {

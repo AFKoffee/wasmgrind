@@ -13,7 +13,7 @@ However, there is no mechanism that gives each thread a separate TLS and thread-
 **Note:** The wasm-threadify crate at this point in time heavily relies on the _linker symbols emitted by llvm_ and _memory layout configured_ by the Rust compiler to prepare the binary for multithreading. Therefore, it is primary targeted at Rust programs that are compiled to WebAssembly. If you want to assess whether Wasmgrind can handle your binary, check out [Chapter 12: Wasm-Threadify](wasm_threadify.md) for in-depth explainations.
 
 ## Runtime API
-The [Internal Runtime API](./project_structure/the_internal_api.md) is loosely inspired by the POSIX Threads API but is mainly intended to make multithreading accessible from WebAssembly in the first place rather than implementing Pthreads as a whole.
+The [internal runtime ABI](./project_structure/the_internal_api.md) is loosely inspired by the POSIX Threads API but is mainly intended to make multithreading accessible from WebAssembly in the first place rather than implementing Pthreads as a whole.
 
 Another important aspect of this API is that it is embedder independent because it relies only on WebAssembly primitives. This was an important design decision as we wanted to decouple Wasmgrind from a specific runtime environment. Having this API enables us to run binaries on any host as long as we implement the API with host specific mechanisms.
 

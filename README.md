@@ -61,7 +61,7 @@ Wasmgrind provides some examples that show how to use its native Rust API. These
 Each example has its own set of options. Refer to the CLI defined in the source files for detailed information.
 
 ### Example Setup - Step By Step
-This section will provide a simple step-by-step guide on how replicate the behavior `examples/minimal-test` with the standard Wasmgrind CLI. It aims to provide insights into the inner workings of the examples.
+This section will provide a simple step-by-step guide on how to replicate the behavior of `examples/minimal-test` with the standard Wasmgrind CLI. It aims to provide insights into the inner workings of the examples.
 
 #### 1. Compiling the example binary
 Assuming you have cloned the repository and are located at the project root, navigate to the example project:

@@ -5,14 +5,15 @@ Thread management in the browser is based on _WebWorkers_. These are asynchronou
 Unlike os-threads, a web worker can not receive a specific closure upon startup. It rather expects a JavaScript file to run. The sole purpose of this file (`worker.js`) is to set up an event handler such that the parent thread can communicate with its child.
 
 Every WebWorker has its own execution context, which means that objects are not shared across workers but have to be sent to them explicitly. Therefore, the parent thread posts an initialization message to the newly created worker just after startup. This message contains:
-- The compiled wasmgrind-js utility library
-- The shared memory of the wasmgrind-js utility library
-- The compiled WebAssembly module, which contains the code for the thread to be run
-- The shared memory module, which is used by all threads
+- The compiled wasmgrind-js WebAssembly module
+- The shared memory for use with the wasmgrind-js WebAssembly module
+- The target WebAssembly module, which should be run with Wasmgrind
+- The memory module, which is shared between all instances of target WebAssembly modules.
 - The thread-id of to be set for this child thread
 - A pointer to the closure that this thread should run
+- A pointer to a channel struct that is used to send execution context information to the thread (e.g. shared data structures for thread management and exeuction tracing)
 
-Upon receiving the message, the worker instantiates the utility library and target WebAssembly module providing implementations of the internal runtime API functions and calls `thread_start` with the pointer to the closure.
+Upon receiving the message, the worker instantiates the wasmgrind-js and target WebAssembly module providing implementations of the internal runtime ABI functions and calls `thread_start` with the pointer to the closure.
 
 ## Signaling Thread Termination
 On native platforms the operating system provides the information whether a thread has finished. Because WebWorker wait for messages rather than simply executing a closure and then exit, we have to implement such a mechanism ourselves.
@@ -40,4 +41,4 @@ If a thread signals termination, it is removed from the set of running threads. 
 
 If a _running_ thread is joined, a new conditional handle is created and inserted into the map of pending joins associated with the _id of the thread to be joined_. A reference to this handle is returned to the caller. If a _terminated_ thread is joined, its conditional handle is removed from the map of terminated threads and returned to the caller.
 
-**Note:** This structure seems very suboptimal and can probably be improved but it works for now.
+**Note:** This structure seems suboptimal and can probably be improved but it works for now.

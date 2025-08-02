@@ -38,6 +38,11 @@ impl ThreadlinkContext {
         if let Some(tid) = thread_id {
             // This only happens for workers
             wasmgrind_core::tmgmt::set_thread_id(tid).map_err(|e| JsError::from(&*e))?
+        } else {
+            // In this case we are in the main execution context of the function,
+            // i.e., in the ThreadlinkRunner WebWorker
+            let tid = wasmgrind_core::tmgmt::next_available_thread_id();
+            wasmgrind_core::tmgmt::set_thread_id(tid).map_err(|e| JsError::from(&*e))?;
         };
 
         let closures = ThreadlinkClosures::new(&memory, &module, tmgmt.clone())?;
