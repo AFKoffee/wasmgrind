@@ -1,6 +1,6 @@
 # The Internal API
 
-The internal runtime API is defined in file: `crates/wasm-threadlink/wasm_abi.rs`. 
+The internal runtime ABI is defined in file: `crates/wasm-threadlink/wasm_abi.rs`. 
 
 **Note:** The functions are subject to change. Furthermore, the API may be separated from the wasm-threadlink library in the future!
 

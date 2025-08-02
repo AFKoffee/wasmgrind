@@ -1,6 +1,6 @@
 # Wasm-Threadlink
 
-Wasm-Threadlink is an essential crate when it comes to compiling programs to WebAssembly for usage with Wasmgrind. It wraps the internal runtime API such that it is imported by the WebAssembly binary and provides convenient wrapper functions for thread management and synchronization.
+Wasm-Threadlink is an essential crate when it comes to compiling programs to WebAssembly for usage with Wasmgrind. It wraps the internal runtime ABI such that it is imported by the WebAssembly binary and provides convenient wrapper functions for thread management and synchronization.
 
 ## Thread Management API
 The thread management API of Wasm-Threadlink closely follows the threading API of the Rust standard library. Therefore, the internal implementation does also reuse large parts of the standard library threading implementation. This is a breakdown of the most important concepts.
@@ -45,7 +45,7 @@ Lastly, a `JoinHandle` is returned, which can be used to wait for the result of 
 ### Internals of Thread Joining
 Joining of threads can only be performed by using a `JoinHandle`. 
 
-When calling `join()` on the handle, first, the `thread_join` function of the internal runtime API is called using the thread identifier:
+When calling `join()` on the handle, first, the `thread_join` function of the internal runtime ABI is called using the thread identifier:
 ```Rust
 let ret = unsafe { wasm_abi::thread_join(self.native) };
 ```
@@ -58,7 +58,7 @@ Wasm-Threadlink does provide a custom mutex synchronization primitive that shoul
 
 The `TracingMutex` implementation is built upon the [parking-lot](https://github.com/Amanieu/parking_lot) library, which offers efficient synchronization primitives accompanied by a low-level API to create custom synchronization primitives.
 
-The concept of Wasm-Threadlinks' `TracingMutex` is simple: It wrapps the standard mutex of parking-lot internally to insert callbacks to the internal runtime API tracing extension before and after locking or unlocking the mutext respectively. Here is how the internal functions are implemented:
+The concept of Wasm-Threadlinks' `TracingMutex` is simple: It wrapps the standard mutex of parking-lot internally to insert callbacks to the internal runtime ABI tracing extension before and after locking or unlocking the mutext respectively. Here is how the internal functions are implemented:
 
 ```Rust
 use parking_lot::{

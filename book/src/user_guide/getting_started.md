@@ -39,10 +39,10 @@ And verify it is on your PATH:
 wasm-pack --version
 ```
 
-## 4. Install Python
-If you want to run the demo server of the `wasmgrind-js` project, you need to have python installed. You can verify this via:
+## 4. Install NPM
+If you want to run the demo server of the `wasmgrind-js` project, you need to have `npm` installed. You can verify this via:
 ```
-python --version
+npm --version
 ```
 
-The demo server only requires the `sys` and `http.server` packages so for modern python versions there should be no need to install additional modules appart from python itself.
+We recommend to use the [node version manager (nvm)](https://github.com/nvm-sh/nvm) to ensure consistent behavior if you work on multiple node.js projects simultaneously.

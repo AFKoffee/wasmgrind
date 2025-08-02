@@ -1,5 +1,5 @@
 # Standalone Runtime
-The standalone runtime is meant to provide an execution environment for multithreaded WebAssembly without tracing capabilities. It can handle WebAssmebly modules requiring the following functions from the internal runtime API:
+The standalone runtime is meant to provide an execution environment for multithreaded WebAssembly without tracing capabilities. It can handle WebAssmebly modules requiring the following functions from the internal runtime ABI:
 - `wasm_threadlink` `panic`: `(i32) -> ()`
 - `wasm_threadlink` `thread_create`: `(i32, i32) -> (i32)`
 - `wasm_threadlink` `thread_join`: `(i32) -> (i32)`

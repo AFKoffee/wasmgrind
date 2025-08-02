@@ -7,7 +7,7 @@
     "start": "webpack-dev-server"
   },
   "author": "",
-  "license": "ISC",
+  "license": "MIT OR Apache-2.0",
   "description": "",
   "devDependencies": {
     "copy-webpack-plugin": "^13.0.0",

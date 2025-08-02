@@ -1,5 +1,5 @@
 # Tracing Runtime
-The tracing runtime is meant to provide an execution environment for multithreaded WebAssembly including tracing capabilities. It can handle WebAssembly modules requiring the following functions from the internal runtime API and wasabi instrumentation:
+The tracing runtime is meant to provide an execution environment for multithreaded WebAssembly including tracing capabilities. It can handle WebAssembly modules requiring the following functions from the internal runtime ABI and wasabi instrumentation:
 - `wasm_threadlink` `panic`: `(i32) -> ()`
 - `wasm_threadlink` `thread_create`: `(i32, i32, i32, i32) -> (i32)`
 - `wasm_threadlink` `thread_join`: `(i32, i32, i32) -> (i32)`

@@ -1,17 +1,17 @@
 # WebAssembly Instrumentation
 Wasmgrind-Core uses Wasabi under the hood to perform binary instrumentation for execution tracing. The following parts of the WebAssembly module are altered in this process:
-- specific calls to the internal runtime API, i.e., `thread_create`, `thread_join`, `start_lock`, `finish_lock`, `start_unlock`, `finish_unlock`
+- specific calls to the internal runtime ABI, i.e., `thread_create`, `thread_join`, `start_lock`, `finish_lock`, `start_unlock`, `finish_unlock`
 - memory instructions like `load` and `store` (including atomic memory instructions, i.e., `cmpxchg`, `rmw`, `atomic.load` and `atomic.store`)
 
-## Instrumentation of Internal Runtime API Calls
-All calls to the internal runtime API stated above are extended by two parameters: the current function index and the current instruction index.
+## Instrumentation of internal runtime ABI Calls
+All calls to the internal runtime ABI stated above are extended by two parameters: the current function index and the current instruction index.
 
 For example: 
 - `thread_create` will have signature `(i32, i32, i32, i32) -> (i32)` instead of `(i32, i32) -> (i32)` after the instrumentation.
 - `start_lock` will have signature `(i32, i32, i32) -> ()` instead of `(i32) -> ()` after the instrumentation.
 
 ## Instrumentation of Memory Instructions
-To record memory accesses, wasabi injects two new functions into the internal runtime API. These are imported under the `wasabi` namespace and have the following names:
+To record memory accesses, wasabi injects two new functions into the internal runtime ABI. These are imported under the `wasabi` namespace and have the following names:
 
 - `read_hook`: A function with four arguments indicating a memory read: the memory address being accessed, the number of accessed bytes, the current function index, the current instruction index
 - `write_hook`: A function with four arguments indicating a memory write: the memory address being accessed, the number of accessed bytes, the current function index, the current instruction index
