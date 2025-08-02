@@ -2,17 +2,17 @@
 There are two ways of using Wasmgrind on native platforms: as _binary_ or _library_.
 
 ## Wasmgrind as a Binary
-The binary offers a simple command line interface to Wasmgrind that should not yet be considered stable. It is intended to be used with binaries that do **not** require any imports besides the internal runtime API.
+The binary offers a simple command line interface to Wasmgrind that should not yet be considered stable. It is intended to be used with binaries that do **not** require any imports besides the internal runtime ABI.
 
 Wasmgrind currently offers the following CLI:
 
     wasmgrind [OPTIONS] <BINARY> <FUNCTION>
 
-Where `<BINARY>` is the path to a binary WebAssembly module that imports the _standalone_ internal runtime API, i.e., that is compiled as described in the last chapter and `FUNCTION` is the name of an exported function of the binary, which takes no parameters and returns no result.
+Where `<BINARY>` is the path to a binary WebAssembly module that imports the _standalone_ internal runtime ABI, i.e., that is compiled as described in the last chapter and `FUNCTION` is the name of an exported function of the binary, which takes no parameters and returns no result.
 
 The `[OPTIONS]` can be any number of the following:
 - **`-t`** or **`--tracing`**:  
-Executes the binary with execution tracing. This option assumes that the WebAssembly module imports the _tracing_ internal runtime API. It emits the trace in RapidBin format and its corresponding metadata as `trace.bin` and `trace.json` file inside the working directory after the specified function terminates.
+Executes the binary with execution tracing. This option assumes that the WebAssembly module imports the _tracing_ internal runtime ABI. It emits the trace in RapidBin format and its corresponding metadata as `trace.bin` and `trace.json` file inside the working directory after the specified function terminates.
 - **`-i`** or **`--interactive`**:  
 Executes the binary in interactive mode. This option is aimed at cases, where the called function deadlocks or does not return on purpose - e.g. an internal event loop. The program will run a simple repl offering the following commands while the specified function is executed:
     - `finish`: Exit interactive mode and resume to standard execution.

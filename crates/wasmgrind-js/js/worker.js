@@ -1,4 +1,4 @@
-import init, { handle_message }from "../../..";
+import init, { handle_message } from "../../..";
 
 self.addEventListener("message", async event => {
     if (event.data.type && event.data.type.startsWith("wgrind_")) {

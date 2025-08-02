@@ -14,7 +14,7 @@ The macros assume that the following crates, modules and functions are accessibl
 - `std::thread`
 
 ## The `thread_create_func!` Macro
-This macro creates a closure that implements the `thread_create` function of the internal runtime API. It emits different types of closures depending on the number of arguments received:
+This macro creates a closure that implements the `thread_create` function of the internal runtime ABI. It emits different types of closures depending on the number of arguments received:
 - 5 arguments: emits a closure that expects 2 parameters and does not include tracing of `fork` events.
 - 6 arguments: emits a closure that expects 4 parameters and does include tracing of `fork` events.
 
@@ -28,7 +28,7 @@ In both cases the first 5 arguments are expected to be ...
 The optional 6th argument is expected to be of type `wasmgrind::runtime::ArcTracing`.
 
 ## The `thread_join_func!` Macro
-This macro creates a closure that implements the `thread_join` function of the internal runtime API. It emits different types of closures depending on the number of arguments received:
+This macro creates a closure that implements the `thread_join` function of the internal runtime ABI. It emits different types of closures depending on the number of arguments received:
 - 1 argument: emits a closure that expects 1 parameter and does not include tracing of `join` events.
 - 2 arguments: emits a closure that expects 3 parameters and does include tracing of `join` events.
 
