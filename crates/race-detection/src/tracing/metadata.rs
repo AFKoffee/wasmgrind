@@ -11,7 +11,7 @@ use crate::{
 #[derive(Serialize, Deserialize, PartialEq, Eq, Debug)]
 struct MemoryIdentifier {
     address: u32,
-    align: u32,
+    access_width: u32,
 }
 
 #[derive(Serialize, Deserialize, PartialEq, Eq, Debug)]
@@ -34,7 +34,7 @@ struct MemoryRecord {
 
 impl MemoryRecord {
     fn into_fields(self) -> ((u32, u32), u64) {
-        ((self.wasm_id.address, self.wasm_id.align), self.trace_id)
+        ((self.wasm_id.address, self.wasm_id.access_width), self.trace_id)
     }
 }
 
@@ -136,7 +136,7 @@ impl WasmgrindTraceMetadata {
             self.memory_records.push(MemoryRecord {
                 wasm_id: MemoryIdentifier {
                     address: *k1,
-                    align: *k2,
+                    access_width: *k2,
                 },
                 trace_id: *v,
             });
