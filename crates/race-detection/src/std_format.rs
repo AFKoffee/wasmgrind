@@ -1,7 +1,7 @@
 use crate::generic::{Encoder, Event, EventResult, Operation};
 use std::io::{Seek, Write};
 
-/// An encoder to emit execution traces in _RapidBin_ format
+/// An encoder to emit execution traces in _STD_ format
 pub struct StdFormatEncoder;
 
 impl StdFormatEncoder {

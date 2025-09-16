@@ -45,6 +45,7 @@
 - [Race Detection](./developers_guide/race_detection.md)
     - [Tracing](./developers_guide/race_detection/tracing.md)
     - [RapidBin - The Binary Trace Format](./developers_guide/race_detection/rapid_bin.md)
+    - [Overlapping Memory Accesses](./developers_guide/race_detection/overlaps.md)
 - [Wasmgrind Core](./developers_guide/wasmgrind_core.md)
     - [Thread Management Utilities](./developers_guide/wasmgrind_core/thread_management.md)
     - [WebAssembly Instrumentation](./developers_guide/wasmgrind_core/wasm_instrumentation.md)

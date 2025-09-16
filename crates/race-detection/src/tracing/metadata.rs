@@ -70,6 +70,18 @@ impl LocationRecord {
     }
 }
 
+/// The metadata of a single Wasmgrind execution trace.
+/// 
+/// This struct contains all necessary information to convert
+/// a binary trace in RapidBin format back to Wasmgrinds
+/// internal representation.
+/// 
+/// The conversion will, of course, only succeed if the
+/// binary execution trace is in sync with the metadata,
+/// i.e., the metadata and binary execution trace must
+/// have been emitted together in a single
+/// [`BinaryTraceOutput`][`crate::tracing::BinaryTraceOutput`]
+/// instance.
 #[derive(Serialize, Deserialize, PartialEq, Eq, Debug)]
 pub struct WasmgrindTraceMetadata {
     thread_records: Vec<ThreadRecord>,
@@ -187,10 +199,16 @@ impl WasmgrindTraceMetadata {
             .collect();
     }
 
+    /// Attempts to serialize the metadata to JSON format.
     pub fn to_json(&self) -> Result<String, Error> {
         serde_json::to_string_pretty(&self).map_err(Error::from)
     }
 
+    /// Attempts to build a metadata struct from data provided in JSON format.
+    /// 
+    /// This function will not buffer the provided reader. If you
+    /// need buffering, you need to apply your own buffering, e.g.,
+    /// by using [`std::io::BufReader`].
     pub fn from_json<R: Read>(reader: R) -> Result<Self, Error> {
         serde_json::from_reader(reader).map_err(Error::from)
     }
@@ -223,6 +241,7 @@ impl WasmgrindTraceMetadata {
     }
 }
 
+/// A pair of two distinct memory accesses that share at least one byte of targeted memory.
 #[derive(PartialEq, Eq)]
 pub struct Overlap<'a> {
     threads_x: &'a HashSet<u64>,
@@ -253,6 +272,14 @@ impl Overlap<'_> {
         }
     }
 
+    /// Creates a short message describing the overlap.
+    /// 
+    /// Specifically, this message contains the following information:
+    /// -   The threads among which each of the two memory accesses is shared
+    /// -   The type of overlap: Do the memory accesses only _intersect_ or does
+    ///     one access _contain_ the other?
+    /// -   The unique ID, target memory address and number of accessed bytes
+    ///     for both memory accesses.
     pub fn description(&self) -> String {
         let id_x = self.access_x.trace_id;
         let id_y = self.access_y.trace_id;
