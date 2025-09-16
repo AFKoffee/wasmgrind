@@ -4,9 +4,9 @@ use anyhow::{Error, bail};
 use representation::Event;
 
 use crate::{
-    generic::Encoder,
+    generic::{Encoder, Operation, Parser},
     rapidbin::encoder::RapidBinEncoder,
-    tracing::{converter::WasmgrindTraceConverter, metadata::WasmgrindTraceMetadata},
+    tracing::{converter::WasmgrindTraceConverter, metadata::WasmgrindTraceMetadata}, RapidBinParser,
 };
 
 mod converter;
@@ -86,7 +86,7 @@ impl Tracing {
 
         Ok(BinaryTraceOutput {
             trace: binary_trace,
-            metadata: converter.genrate_metadata(),
+            metadata: converter.generate_metadata(),
         })
     }
 }
@@ -97,6 +97,22 @@ impl Default for Tracing {
     }
 }
 
+pub struct Overlaps<'a> {
+    overlaps: Vec<metadata::Overlap<'a>>,
+    n_memory_events: usize,
+    n_overlap_events: usize,
+}
+
+impl <'a> Overlaps<'a> {
+    pub fn get_overlaps(&self) -> &Vec<metadata::Overlap<'a>> {
+        &self.overlaps
+    }
+
+    pub fn get_overlap_ratio(&self) -> (usize, usize) {
+        (self.n_overlap_events, self.n_memory_events)
+    }
+}
+
 /// An execution trace in RapidBin format including its metadata.
 pub struct BinaryTraceOutput {
     /// The binary execution trace
@@ -104,6 +120,31 @@ pub struct BinaryTraceOutput {
 
     /// The trace metadata
     pub metadata: WasmgrindTraceMetadata,
+}
+
+impl BinaryTraceOutput {
+    pub fn find_overlaps(&self) -> Result<Overlaps, Error> {
+        let overlaps = self.metadata.find_overlaps();
+        
+        let mut parser = RapidBinParser::new();
+        let mut n_memory_events = 0;
+        let mut n_overlap_events = 0;
+        for event in parser.parse(&self.trace[..])? {
+            let (_, op, _) = event?.into_fields();
+            match op {
+                Operation::Read { memory } |
+                Operation::Write { memory } => {
+                    n_memory_events += 1;
+                    if overlaps.iter().any(|overlap| overlap.contains(memory)) {
+                        n_overlap_events += 1;
+                    }
+                },
+                _ => continue
+            }
+        }
+
+        Ok(Overlaps { overlaps, n_memory_events, n_overlap_events })
+    }
 }
 
 #[cfg(test)]
