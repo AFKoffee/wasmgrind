@@ -1,4 +1,4 @@
-use std::{collections::HashMap, hash::Hash};
+use std::{collections::{HashMap, HashSet}, hash::Hash};
 
 use crate::generic;
 
@@ -41,6 +41,7 @@ pub struct WasmgrindTraceConverter {
     variables: WasmgrindToGeneric<(u32, u32)>,
     locks: WasmgrindToGeneric<u32>,
     locations: WasmgrindToGeneric<(u32, u32)>,
+    shared_variables: HashMap<u64, HashSet<u64>>,
 }
 
 impl WasmgrindTraceConverter {
@@ -50,6 +51,7 @@ impl WasmgrindTraceConverter {
             variables: WasmgrindToGeneric::new(),
             locks: WasmgrindToGeneric::new(),
             locations: WasmgrindToGeneric::new(),
+            shared_variables: HashMap::new()
         }
     }
 
@@ -58,11 +60,23 @@ impl WasmgrindTraceConverter {
 
         let thread_id = self.threads.get_identifier(t);
         let operation = match op {
-            Op::Read { addr, n } => generic::Operation::Read {
-                memory: self.variables.get_identifier(&(*addr, *n)),
+            Op::Read { addr, n } => {
+                let variable_id = self.variables.get_identifier(&(*addr, *n));
+                self.shared_variables.entry(variable_id)
+                    .or_default()
+                    .insert(thread_id);
+                generic::Operation::Read {
+                    memory: variable_id,
+                }
             },
-            Op::Write { addr, n } => generic::Operation::Write {
-                memory: self.variables.get_identifier(&(*addr, *n)),
+            Op::Write { addr, n } => {
+                let variable_id = self.variables.get_identifier(&(*addr, *n));
+                self.shared_variables.entry(variable_id)
+                    .or_default()
+                    .insert(thread_id);
+                generic::Operation::Write {
+                    memory: variable_id,
+                }
             },
             Op::Aquire { lock } => generic::Operation::Aquire {
                 lock: self.locks.get_identifier(lock),
@@ -85,13 +99,14 @@ impl WasmgrindTraceConverter {
         generic::Event::new(thread_id, operation, location)
     }
 
-    pub fn genrate_metadata(&self) -> WasmgrindTraceMetadata {
+    pub fn generate_metadata(&self) -> WasmgrindTraceMetadata {
         let mut metadata = WasmgrindTraceMetadata::new();
 
         metadata.fill_thread_records(self.threads.get_map());
         metadata.fill_memory_records(self.variables.get_map());
         metadata.fill_lock_records(self.locks.get_map());
         metadata.fill_location_records(self.locations.get_map());
+        metadata.fill_shared_variables(&self.shared_variables);
 
         metadata
     }

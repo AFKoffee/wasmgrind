@@ -1,14 +1,16 @@
-use std::{collections::HashMap, io::Read};
+use std::{collections::{HashMap, HashSet}, io::Read};
 
 use anyhow::{Error, anyhow};
 use serde::{Deserialize, Serialize};
 
 use crate::{
     generic,
-    tracing::{Op, representation::Event},
+    tracing::{metadata::analysis::{line_sweep_algorithm}, representation::Event, Op},
 };
 
-#[derive(Serialize, Deserialize, PartialEq, Eq, Debug)]
+mod analysis;
+
+#[derive(Serialize, Deserialize, PartialEq, Eq, Debug, Hash)]
 struct MemoryIdentifier {
     address: u32,
     access_width: u32,
@@ -26,7 +28,7 @@ impl ThreadRecord {
     }
 }
 
-#[derive(Serialize, Deserialize, PartialEq, Eq, Debug)]
+#[derive(Serialize, Deserialize, PartialEq, Eq, Debug, Hash)]
 struct MemoryRecord {
     wasm_id: MemoryIdentifier,
     trace_id: u64,
@@ -74,6 +76,7 @@ pub struct WasmgrindTraceMetadata {
     memory_records: Vec<MemoryRecord>,
     lock_records: Vec<LockRecord>,
     location_records: Vec<LocationRecord>,
+    shared_variables: HashMap<u64, HashSet<u64>>
 }
 
 impl WasmgrindTraceMetadata {
@@ -83,6 +86,7 @@ impl WasmgrindTraceMetadata {
             memory_records: Vec::new(),
             lock_records: Vec::new(),
             location_records: Vec::new(),
+            shared_variables: HashMap::new()
         }
     }
 
@@ -176,12 +180,126 @@ impl WasmgrindTraceMetadata {
             .sort_by(|r1, r2| r1.trace_id.cmp(&r2.trace_id));
     }
 
+    pub fn fill_shared_variables(&mut self, map: &HashMap<u64, HashSet<u64>>) {
+        self.shared_variables = map.iter()
+            .filter(|(_, set)| set.len() > 1)
+            .map(|(x, y)| (*x, y.clone()))
+            .collect();
+    }
+
     pub fn to_json(&self) -> Result<String, Error> {
         serde_json::to_string_pretty(&self).map_err(Error::from)
     }
 
     pub fn from_json<R: Read>(reader: R) -> Result<Self, Error> {
         serde_json::from_reader(reader).map_err(Error::from)
+    }
+
+    pub(super) fn find_overlaps(&self) -> Vec<Overlap> {
+        // We filter for memory accesses here that are shared amongst different threads.
+        // If memory accesses overlap in the same thread we trust the compiler to have
+        // it figured out correctly. Anyways, if there is corrupted data due to overlapping
+        // memory accesses inside a single thread only, this is no concurrency related error
+        // so this does not bother us right now.
+        line_sweep_algorithm(
+            self.memory_records.iter()
+                .filter(|record| self.shared_variables.contains_key(&record.trace_id))
+        ).into_iter()
+            .filter_map(|(access_x, access_y)| {
+                let threads_x = self.shared_variables.get(&access_x.trace_id).expect("Should be present!");
+                let threads_y = self.shared_variables.get(&access_y.trace_id).expect("Should be present!");
+
+                if threads_x.intersection(threads_y).count() > 0 {
+                    Some(Overlap {
+                        threads_x,
+                        access_x,
+                        threads_y,
+                        access_y,
+                    })
+                } else {
+                    None
+                }
+            }).collect()
+    }
+}
+
+#[derive(PartialEq, Eq)]
+pub struct Overlap<'a> {
+    threads_x: &'a HashSet<u64>,
+    access_x: &'a MemoryRecord,
+    threads_y: &'a HashSet<u64>,
+    access_y: &'a MemoryRecord,
+}
+
+impl Overlap<'_> {
+    pub fn is_intersection(&self) -> bool {
+        let start_x = self.access_x.wasm_id.address;
+        let start_y = self.access_y.wasm_id.address;
+        
+        let length_x  = self.access_x.wasm_id.access_width;
+        let length_y = self.access_y.wasm_id.access_width;
+
+        let end_x = start_x + length_x;
+        let end_y = start_y + length_y;
+
+        if start_x == start_y {
+            false
+        } else if start_x < start_y && end_x > start_y {
+            end_x < end_y
+        } else if start_y < start_x && end_y > start_x {
+            end_y < end_x
+        } else {
+            panic!("Overlap struct contained non overlapping memory accesses")
+        }
+    }
+
+    pub fn description(&self) -> String {
+        let id_x = self.access_x.trace_id;
+        let id_y = self.access_y.trace_id;
+        
+        let start_x = self.access_x.wasm_id.address;
+        let start_y = self.access_y.wasm_id.address;
+        
+        let length_x  = self.access_x.wasm_id.access_width;
+        let length_y = self.access_y.wasm_id.access_width;
+
+        let general_msg = format!(
+            "Memory access {} (threads: {}) overlaps with memory access {} (threads: {}) - ",
+            id_x, self.threads_x.iter().map(|tid| tid.to_string()).collect::<Vec<String>>().join(", "),
+            id_y, self.threads_y.iter().map(|tid| tid.to_string()).collect::<Vec<String>>().join(", ")
+        );
+
+        let specific_msg = if self.is_intersection() {
+            format!(
+                "Access {} at {} of length {} {} access {} at {} of length {}",
+                id_x, start_x, length_x,
+                "intersects with",
+                id_y, start_y, length_y,
+            )
+        } else if length_x > length_y {
+            format!(
+                "Access {} at {} of length {} {} access {} at {} of length {}",
+                id_x, start_x, length_x,
+                "contains",
+                id_y, start_y, length_y,
+            )
+        } else if length_x < length_y {
+            format!(
+                "Access {} at {} of length {} {} access {} at {} of length {}",
+                id_y, start_y, length_y,
+                "contains",
+                id_x, start_x, length_x,
+            )
+        } else {
+            String::from("Equal memory accesses obviously overlap.")
+        };
+
+        format!("{general_msg}{specific_msg}")
+    }
+
+    pub fn contains(&self, memory_access: u64) -> bool {
+        self.access_x.trace_id == memory_access ||
+            self.access_y.trace_id == memory_access
     }
 }
 
