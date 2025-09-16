@@ -80,7 +80,7 @@ pub struct WasmgrindTraceMetadata {
 }
 
 impl WasmgrindTraceMetadata {
-    pub fn new() -> Self {
+    pub(super) fn new() -> Self {
         Self {
             thread_records: Vec::new(),
             memory_records: Vec::new(),
@@ -90,7 +90,7 @@ impl WasmgrindTraceMetadata {
         }
     }
 
-    pub fn into_converter(self) -> GenericTraceConverter {
+    pub(super) fn into_converter(self) -> GenericTraceConverter {
         GenericTraceConverter {
             threads: HashMap::from_iter(
                 self.thread_records
@@ -119,7 +119,7 @@ impl WasmgrindTraceMetadata {
         }
     }
 
-    pub fn fill_thread_records(&mut self, map: &HashMap<u32, u64>) {
+    pub(super) fn fill_thread_records(&mut self, map: &HashMap<u32, u64>) {
         self.thread_records.clear();
 
         for (k, v) in map.iter() {
@@ -133,7 +133,7 @@ impl WasmgrindTraceMetadata {
             .sort_by(|r1, r2| r1.trace_id.cmp(&r2.trace_id));
     }
 
-    pub fn fill_memory_records(&mut self, map: &HashMap<(u32, u32), u64>) {
+    pub(super) fn fill_memory_records(&mut self, map: &HashMap<(u32, u32), u64>) {
         self.memory_records.clear();
 
         for ((k1, k2), v) in map.iter() {
@@ -149,7 +149,7 @@ impl WasmgrindTraceMetadata {
             .sort_by(|r1, r2| r1.trace_id.cmp(&r2.trace_id));
     }
 
-    pub fn fill_lock_records(&mut self, map: &HashMap<u32, u64>) {
+    pub(super) fn fill_lock_records(&mut self, map: &HashMap<u32, u64>) {
         self.lock_records.clear();
 
         for (k, v) in map.iter() {
@@ -163,7 +163,7 @@ impl WasmgrindTraceMetadata {
             .sort_by(|r1, r2| r1.trace_id.cmp(&r2.trace_id));
     }
 
-    pub fn fill_location_records(&mut self, map: &HashMap<(u32, u32), u64>) {
+    pub(super) fn fill_location_records(&mut self, map: &HashMap<(u32, u32), u64>) {
         self.location_records.clear();
 
         for ((k1, k2), v) in map.iter() {
@@ -180,7 +180,7 @@ impl WasmgrindTraceMetadata {
             .sort_by(|r1, r2| r1.trace_id.cmp(&r2.trace_id));
     }
 
-    pub fn fill_shared_variables(&mut self, map: &HashMap<u64, HashSet<u64>>) {
+    pub(super) fn fill_shared_variables(&mut self, map: &HashMap<u64, HashSet<u64>>) {
         self.shared_variables = map.iter()
             .filter(|(_, set)| set.len() > 1)
             .map(|(x, y)| (*x, y.clone()))
@@ -232,7 +232,7 @@ pub struct Overlap<'a> {
 }
 
 impl Overlap<'_> {
-    pub fn is_intersection(&self) -> bool {
+    fn is_intersection(&self) -> bool {
         let start_x = self.access_x.wasm_id.address;
         let start_y = self.access_y.wasm_id.address;
         
@@ -297,7 +297,7 @@ impl Overlap<'_> {
         format!("{general_msg}{specific_msg}")
     }
 
-    pub fn contains(&self, memory_access: u64) -> bool {
+    pub(super) fn contains(&self, memory_access: u64) -> bool {
         self.access_x.trace_id == memory_access ||
             self.access_y.trace_id == memory_access
     }
@@ -309,7 +309,7 @@ impl Default for WasmgrindTraceMetadata {
     }
 }
 
-pub struct GenericTraceConverter {
+pub(super) struct GenericTraceConverter {
     threads: HashMap<u64, u32>,
     variables: HashMap<u64, (u32, u32)>,
     locks: HashMap<u64, u32>,
@@ -317,7 +317,7 @@ pub struct GenericTraceConverter {
 }
 
 impl GenericTraceConverter {
-    pub fn convert_event(&self, event: &generic::Event) -> Result<Event, Error> {
+    pub(super) fn convert_event(&self, event: &generic::Event) -> Result<Event, Error> {
         let (tid, operation, loc) = event.get_fields();
 
         let thread = self

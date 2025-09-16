@@ -10,7 +10,7 @@ use crate::{
 };
 
 mod converter;
-mod metadata;
+pub mod metadata;
 mod representation;
 
 pub use representation::Op;
@@ -144,6 +144,22 @@ impl BinaryTraceOutput {
         }
 
         Ok(Overlaps { overlaps, n_memory_events, n_overlap_events })
+    }
+}
+
+impl TryFrom<BinaryTraceOutput> for Tracing {
+    type Error = Error;
+
+    fn try_from(value: BinaryTraceOutput) -> Result<Self, Self::Error> {
+        let converter = value.metadata.into_converter();
+        let mut trace = Vec::new();
+
+        let mut parser = RapidBinParser::new();
+        for event in parser.parse(&value.trace[..])? {
+            trace.push(converter.convert_event(&event?)?);
+        }
+
+        Ok(Tracing { events: Mutex::new(trace) })
     }
 }
 
