@@ -70,7 +70,7 @@ local.set $n_bytes_tmp
 local.set $byte_value_tmp
 local.tee $dst_addr_tmp
 local.get $byte_value_tmp
-local.set $n_bytes_tmp
+local.get $n_bytes_tmp
 <original memory.fill instruction>
 local.get $dst_addr_tmp
 local.get $n_bytes_tmp
@@ -92,7 +92,7 @@ local.set $n_bytes_tmp
 local.set $src_addr_tmp
 local.tee $dst_addr_tmp
 local.get $src_addr_tmp
-local.set $n_bytes_tmp
+local.get $n_bytes_tmp
 <original memory.copy instruction>
 local.get $src_addr_tmp
 local.get $n_bytes_tmp
@@ -119,7 +119,7 @@ local.set $n_bytes_tmp
 local.set $data_offset_tmp
 local.tee $dst_addr_tmp
 local.get $data_offset_tmp
-local.set $n_bytes_tmp
+local.get $n_bytes_tmp
 <original memory.init instruction>
 local.get $dst_addr_tmp
 local.get $n_bytes_tmp
@@ -217,8 +217,8 @@ i32.const <current function index>
 i32.const <current instruction index>
 call <index of the read_hook function>
 local.get $addr_tmp
-local.set $expected_tmp
-local.set $timeout_tmp
+local.get $expected_tmp
+local.get $timeout_tmp
 <original atomic.wait instruction>
 
 ... ;; code after the atomic wait instruction
