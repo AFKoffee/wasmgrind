@@ -61,7 +61,14 @@ fn main() -> Result<(), anyhow::Error> {
         }
 
         runner.join().expect("Error: Runner Thread panicked!")?;
-        save_trace(runtime.generate_binary_trace()?)
+        let trace = runtime.generate_binary_trace()?;
+        let overlaps = trace.find_overlaps()?;
+        for overlap in overlaps.get_overlaps() {
+            println!("WARNING: {}", overlap.description())
+        }
+        let (n_overlap_events, n_memory_events) = overlaps.get_overlap_ratio();
+        println!("Overlap Ratio of the Trace (Overlaps / Memory Accesses): {} / {}", n_overlap_events, n_memory_events);
+        save_trace(trace)
     } else {
         wasmgrind::run(args.binary, args.function, args.emit_patched)?
             .join()

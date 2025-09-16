@@ -1858,7 +1858,7 @@ dependencies = [
 [[package]]
 name = "wasabi"
 version = "0.3.0"
-source = "git+https://github.com/AFKoffee/wasabi.git?branch=embedder-agnostic-api#71cfde9b96feb4e750d0d9567095757defc56732"
+source = "git+https://github.com/AFKoffee/wasabi.git?branch=embedder-agnostic-api#d08e670402c4a483ac104a3c70692137c7e5e75e"
 dependencies = [
  "enumset",
  "main_error",
@@ -1876,7 +1876,7 @@ dependencies = [
 [[package]]
 name = "wasabi_wasm"
 version = "0.7.0"
-source = "git+https://github.com/AFKoffee/wasabi.git?branch=embedder-agnostic-api#71cfde9b96feb4e750d0d9567095757defc56732"
+source = "git+https://github.com/AFKoffee/wasabi.git?branch=embedder-agnostic-api#d08e670402c4a483ac104a3c70692137c7e5e75e"
 dependencies = [
  "mimalloc",
  "nohash-hasher",

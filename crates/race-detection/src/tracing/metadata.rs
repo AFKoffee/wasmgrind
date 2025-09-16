@@ -1,17 +1,19 @@
-use std::{collections::HashMap, io::Read};
+use std::{collections::{HashMap, HashSet}, io::Read};
 
 use anyhow::{Error, anyhow};
 use serde::{Deserialize, Serialize};
 
 use crate::{
     generic,
-    tracing::{Op, representation::Event},
+    tracing::{metadata::analysis::{line_sweep_algorithm}, representation::Event, Op},
 };
 
-#[derive(Serialize, Deserialize, PartialEq, Eq, Debug)]
+mod analysis;
+
+#[derive(Serialize, Deserialize, PartialEq, Eq, Debug, Hash)]
 struct MemoryIdentifier {
     address: u32,
-    align: u32,
+    access_width: u32,
 }
 
 #[derive(Serialize, Deserialize, PartialEq, Eq, Debug)]
@@ -26,7 +28,7 @@ impl ThreadRecord {
     }
 }
 
-#[derive(Serialize, Deserialize, PartialEq, Eq, Debug)]
+#[derive(Serialize, Deserialize, PartialEq, Eq, Debug, Hash)]
 struct MemoryRecord {
     wasm_id: MemoryIdentifier,
     trace_id: u64,
@@ -34,7 +36,7 @@ struct MemoryRecord {
 
 impl MemoryRecord {
     fn into_fields(self) -> ((u32, u32), u64) {
-        ((self.wasm_id.address, self.wasm_id.align), self.trace_id)
+        ((self.wasm_id.address, self.wasm_id.access_width), self.trace_id)
     }
 }
 
@@ -68,25 +70,39 @@ impl LocationRecord {
     }
 }
 
+/// The metadata of a single Wasmgrind execution trace.
+/// 
+/// This struct contains all necessary information to convert
+/// a binary trace in RapidBin format back to Wasmgrinds
+/// internal representation.
+/// 
+/// The conversion will, of course, only succeed if the
+/// binary execution trace is in sync with the metadata,
+/// i.e., the metadata and binary execution trace must
+/// have been emitted together in a single
+/// [`BinaryTraceOutput`][`crate::tracing::BinaryTraceOutput`]
+/// instance.
 #[derive(Serialize, Deserialize, PartialEq, Eq, Debug)]
 pub struct WasmgrindTraceMetadata {
     thread_records: Vec<ThreadRecord>,
     memory_records: Vec<MemoryRecord>,
     lock_records: Vec<LockRecord>,
     location_records: Vec<LocationRecord>,
+    shared_variables: HashMap<u64, HashSet<u64>>
 }
 
 impl WasmgrindTraceMetadata {
-    pub fn new() -> Self {
+    pub(super) fn new() -> Self {
         Self {
             thread_records: Vec::new(),
             memory_records: Vec::new(),
             lock_records: Vec::new(),
             location_records: Vec::new(),
+            shared_variables: HashMap::new()
         }
     }
 
-    pub fn into_converter(self) -> GenericTraceConverter {
+    pub(super) fn into_converter(self) -> GenericTraceConverter {
         GenericTraceConverter {
             threads: HashMap::from_iter(
                 self.thread_records
@@ -115,7 +131,7 @@ impl WasmgrindTraceMetadata {
         }
     }
 
-    pub fn fill_thread_records(&mut self, map: &HashMap<u32, u64>) {
+    pub(super) fn fill_thread_records(&mut self, map: &HashMap<u32, u64>) {
         self.thread_records.clear();
 
         for (k, v) in map.iter() {
@@ -129,14 +145,14 @@ impl WasmgrindTraceMetadata {
             .sort_by(|r1, r2| r1.trace_id.cmp(&r2.trace_id));
     }
 
-    pub fn fill_memory_records(&mut self, map: &HashMap<(u32, u32), u64>) {
+    pub(super) fn fill_memory_records(&mut self, map: &HashMap<(u32, u32), u64>) {
         self.memory_records.clear();
 
         for ((k1, k2), v) in map.iter() {
             self.memory_records.push(MemoryRecord {
                 wasm_id: MemoryIdentifier {
                     address: *k1,
-                    align: *k2,
+                    access_width: *k2,
                 },
                 trace_id: *v,
             });
@@ -145,7 +161,7 @@ impl WasmgrindTraceMetadata {
             .sort_by(|r1, r2| r1.trace_id.cmp(&r2.trace_id));
     }
 
-    pub fn fill_lock_records(&mut self, map: &HashMap<u32, u64>) {
+    pub(super) fn fill_lock_records(&mut self, map: &HashMap<u32, u64>) {
         self.lock_records.clear();
 
         for (k, v) in map.iter() {
@@ -159,7 +175,7 @@ impl WasmgrindTraceMetadata {
             .sort_by(|r1, r2| r1.trace_id.cmp(&r2.trace_id));
     }
 
-    pub fn fill_location_records(&mut self, map: &HashMap<(u32, u32), u64>) {
+    pub(super) fn fill_location_records(&mut self, map: &HashMap<(u32, u32), u64>) {
         self.location_records.clear();
 
         for ((k1, k2), v) in map.iter() {
@@ -176,12 +192,141 @@ impl WasmgrindTraceMetadata {
             .sort_by(|r1, r2| r1.trace_id.cmp(&r2.trace_id));
     }
 
+    pub(super) fn fill_shared_variables(&mut self, map: &HashMap<u64, HashSet<u64>>) {
+        self.shared_variables = map.iter()
+            .filter(|(_, set)| set.len() > 1)
+            .map(|(x, y)| (*x, y.clone()))
+            .collect();
+    }
+
+    /// Attempts to serialize the metadata to JSON format.
     pub fn to_json(&self) -> Result<String, Error> {
         serde_json::to_string_pretty(&self).map_err(Error::from)
     }
 
+    /// Attempts to build a metadata struct from data provided in JSON format.
+    /// 
+    /// This function will not buffer the provided reader. If you
+    /// need buffering, you need to apply your own buffering, e.g.,
+    /// by using [`std::io::BufReader`].
     pub fn from_json<R: Read>(reader: R) -> Result<Self, Error> {
         serde_json::from_reader(reader).map_err(Error::from)
+    }
+
+    pub(super) fn find_overlaps(&self) -> Vec<Overlap> {
+        // We filter for memory accesses here that are shared amongst different threads.
+        // If memory accesses overlap in the same thread we trust the compiler to have
+        // it figured out correctly. Anyways, if there is corrupted data due to overlapping
+        // memory accesses inside a single thread only, this is no concurrency related error
+        // so this does not bother us right now.
+        line_sweep_algorithm(
+            self.memory_records.iter()
+                .filter(|record| self.shared_variables.contains_key(&record.trace_id))
+        ).into_iter()
+            .filter_map(|(access_x, access_y)| {
+                let threads_x = self.shared_variables.get(&access_x.trace_id).expect("Should be present!");
+                let threads_y = self.shared_variables.get(&access_y.trace_id).expect("Should be present!");
+
+                if threads_x.intersection(threads_y).count() > 0 {
+                    Some(Overlap {
+                        threads_x,
+                        access_x,
+                        threads_y,
+                        access_y,
+                    })
+                } else {
+                    None
+                }
+            }).collect()
+    }
+}
+
+/// A pair of two distinct memory accesses that share at least one byte of targeted memory.
+#[derive(PartialEq, Eq)]
+pub struct Overlap<'a> {
+    threads_x: &'a HashSet<u64>,
+    access_x: &'a MemoryRecord,
+    threads_y: &'a HashSet<u64>,
+    access_y: &'a MemoryRecord,
+}
+
+impl Overlap<'_> {
+    fn is_intersection(&self) -> bool {
+        let start_x = self.access_x.wasm_id.address;
+        let start_y = self.access_y.wasm_id.address;
+        
+        let length_x  = self.access_x.wasm_id.access_width;
+        let length_y = self.access_y.wasm_id.access_width;
+
+        let end_x = start_x + length_x;
+        let end_y = start_y + length_y;
+
+        if start_x == start_y {
+            false
+        } else if start_x < start_y && end_x > start_y {
+            end_x < end_y
+        } else if start_y < start_x && end_y > start_x {
+            end_y < end_x
+        } else {
+            panic!("Overlap struct contained non overlapping memory accesses")
+        }
+    }
+
+    /// Creates a short message describing the overlap.
+    /// 
+    /// Specifically, this message contains the following information:
+    /// -   The threads among which each of the two memory accesses is shared
+    /// -   The type of overlap: Do the memory accesses only _intersect_ or does
+    ///     one access _contain_ the other?
+    /// -   The unique ID, target memory address and number of accessed bytes
+    ///     for both memory accesses.
+    pub fn description(&self) -> String {
+        let id_x = self.access_x.trace_id;
+        let id_y = self.access_y.trace_id;
+        
+        let start_x = self.access_x.wasm_id.address;
+        let start_y = self.access_y.wasm_id.address;
+        
+        let length_x  = self.access_x.wasm_id.access_width;
+        let length_y = self.access_y.wasm_id.access_width;
+
+        let general_msg = format!(
+            "Memory access {} (threads: {}) overlaps with memory access {} (threads: {}) - ",
+            id_x, self.threads_x.iter().map(|tid| tid.to_string()).collect::<Vec<String>>().join(", "),
+            id_y, self.threads_y.iter().map(|tid| tid.to_string()).collect::<Vec<String>>().join(", ")
+        );
+
+        let specific_msg = if self.is_intersection() {
+            format!(
+                "Access {} at {} of length {} {} access {} at {} of length {}",
+                id_x, start_x, length_x,
+                "intersects with",
+                id_y, start_y, length_y,
+            )
+        } else if length_x > length_y {
+            format!(
+                "Access {} at {} of length {} {} access {} at {} of length {}",
+                id_x, start_x, length_x,
+                "contains",
+                id_y, start_y, length_y,
+            )
+        } else if length_x < length_y {
+            format!(
+                "Access {} at {} of length {} {} access {} at {} of length {}",
+                id_y, start_y, length_y,
+                "contains",
+                id_x, start_x, length_x,
+            )
+        } else {
+            String::from("Equal memory accesses obviously overlap.")
+        };
+
+        format!("{general_msg}{specific_msg}")
+    }
+
+    pub(super) fn contains(&self, memory_access: u64) -> bool {
+        self.access_x.trace_id == memory_access ||
+            self.access_y.trace_id == memory_access
     }
 }
 
@@ -191,7 +336,7 @@ impl Default for WasmgrindTraceMetadata {
     }
 }
 
-pub struct GenericTraceConverter {
+pub(super) struct GenericTraceConverter {
     threads: HashMap<u64, u32>,
     variables: HashMap<u64, (u32, u32)>,
     locks: HashMap<u64, u32>,
@@ -199,7 +344,7 @@ pub struct GenericTraceConverter {
 }
 
 impl GenericTraceConverter {
-    pub fn convert_event(&self, event: &generic::Event) -> Result<Event, Error> {
+    pub(super) fn convert_event(&self, event: &generic::Event) -> Result<Event, Error> {
         let (tid, operation, loc) = event.get_fields();
 
         let thread = self

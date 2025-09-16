@@ -4,13 +4,15 @@ use anyhow::{Error, bail};
 use representation::Event;
 
 use crate::{
-    generic::Encoder,
+    generic::{Encoder, Operation, Parser},
     rapidbin::encoder::RapidBinEncoder,
-    tracing::{converter::WasmgrindTraceConverter, metadata::WasmgrindTraceMetadata},
+    tracing::{converter::WasmgrindTraceConverter, metadata::WasmgrindTraceMetadata}, RapidBinParser,
 };
 
 mod converter;
-mod metadata;
+
+/// Utilities to manage metadata of Wasmgrind execution traces.
+pub mod metadata;
 mod representation;
 
 pub use representation::Op;
@@ -86,7 +88,7 @@ impl Tracing {
 
         Ok(BinaryTraceOutput {
             trace: binary_trace,
-            metadata: converter.genrate_metadata(),
+            metadata: converter.generate_metadata(),
         })
     }
 }
@@ -97,6 +99,48 @@ impl Default for Tracing {
     }
 }
 
+/// A collection of overlapping memory accesses with regard to a single execution trace.
+/// 
+/// Currently, this struct can only be created using the [`BinaryTraceOutput::find_overlaps`]
+/// function. Therefore, the data contained in this struct specifically relates to the instance
+/// of [`BinaryTraceOutput`] it was created from.
+pub struct Overlaps<'a> {
+    overlaps: Vec<metadata::Overlap<'a>>,
+    n_memory_events: usize,
+    n_overlap_events: usize,
+}
+
+impl <'a> Overlaps<'a> {
+    /// Returns a reference to a list of all pairwise overlaps of distinct memory accesses.
+    /// 
+    /// The overlaps in this list are selected by the following criteria:
+    /// - The memory accesses have to share at least one byte of targeted memory
+    /// - The memory accesses need to occur amongst different threads throughout the
+    ///   execution trace
+    /// 
+    /// Any memory access targeting the same address with the same number of accessed
+    /// bytes is only counted **once**.
+    pub fn get_overlaps(&self) -> &Vec<metadata::Overlap<'a>> {
+        &self.overlaps
+    }
+
+    /// Returns the proportion of overlaps compared to all memory accesses.
+    /// 
+    /// The function returns a tuple of two values:
+    /// - 1st value:  The number of overlapping memory accesses contained in the trace
+    /// - 2nd value:  The number of all memory accesses contained in the trace
+    /// 
+    /// The overlapping memory accesses are determined by the same criteria as stated
+    /// in the documentation of [`Overlaps::get_overlaps`]. The function counts the
+    /// number of **events** that match the criteria. Therefore, if any memory access 
+    /// targeting the same address with the same number of accessed bytes appears
+    /// more than once throughout the execution trace, it will be counted **multiple
+    /// times**.
+    pub fn get_overlap_ratio(&self) -> (usize, usize) {
+        (self.n_overlap_events, self.n_memory_events)
+    }
+}
+
 /// An execution trace in RapidBin format including its metadata.
 pub struct BinaryTraceOutput {
     /// The binary execution trace
@@ -104,6 +148,55 @@ pub struct BinaryTraceOutput {
 
     /// The trace metadata
     pub metadata: WasmgrindTraceMetadata,
+}
+
+impl BinaryTraceOutput {
+    /// Determines all pairwise overlaps of distinct memory accesses in this execution trace.
+    /// 
+    /// This function will collect all pairwise overlaps of distinct memory accesses,
+    /// the total number of memory-access events in this trace as well as the proportion
+    /// of these memory-access events that contain overlapping memory accesses. The information
+    /// can then be queried via the returned [`Overlaps`] instance.
+    /// 
+    /// Refer to [`Overlaps::get_overlaps`] for details on how pairwise overlaps are determined.
+    pub fn find_overlaps(&self) -> Result<Overlaps, Error> {
+        let overlaps = self.metadata.find_overlaps();
+        
+        let mut parser = RapidBinParser::new();
+        let mut n_memory_events = 0;
+        let mut n_overlap_events = 0;
+        for event in parser.parse(&self.trace[..])? {
+            let (_, op, _) = event?.into_fields();
+            match op {
+                Operation::Read { memory } |
+                Operation::Write { memory } => {
+                    n_memory_events += 1;
+                    if overlaps.iter().any(|overlap| overlap.contains(memory)) {
+                        n_overlap_events += 1;
+                    }
+                },
+                _ => continue
+            }
+        }
+
+        Ok(Overlaps { overlaps, n_memory_events, n_overlap_events })
+    }
+}
+
+impl TryFrom<BinaryTraceOutput> for Tracing {
+    type Error = Error;
+
+    fn try_from(value: BinaryTraceOutput) -> Result<Self, Self::Error> {
+        let converter = value.metadata.into_converter();
+        let mut trace = Vec::new();
+
+        let mut parser = RapidBinParser::new();
+        for event in parser.parse(&value.trace[..])? {
+            trace.push(converter.convert_event(&event?)?);
+        }
+
+        Ok(Tracing { events: Mutex::new(trace) })
+    }
 }
 
 #[cfg(test)]
