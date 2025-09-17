@@ -34,7 +34,7 @@ Otherwise install it:
     cargo install wasm-pack
 
 ## Quick Start Guide
-The following sections describe how to get up and running with wasmgrind quickly. For more in-depth explainations refer to the [Wasmgrind Book](https://wasmgrind-d6f2b1.gitlab.io/book/).
+The following sections describe how to get up and running with wasmgrind quickly. For more in-depth explainations refer to the [Wasmgrind Book](https://afkoffee.github.io/wasmgrind/).
 
 ### Compiling Binaries for Wasmgrind
 Wasmgrind assumes that the provided WebAssembly binary imports a set of API functions needed to create and join threads as well as to record important events for tracing.  Currently, the only two ways to utilize this API is to either use the [wasm-threadlink](crates/wasm-threadlink/) crate in your project or to wrap the internal API using your own code. 

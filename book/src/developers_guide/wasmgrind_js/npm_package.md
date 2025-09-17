@@ -43,4 +43,4 @@ export class TraceOutput {
 }
 ```
 
-These exports refer to Rust functions and structs that are exported by the wasmgrind-js crate. See the [wasmgrind-js docs](https://wasmgrind-d6f2b1.gitlab.io/docs/wasmgrind_js/) for further information.
+These exports refer to Rust functions and structs that are exported by the wasmgrind-js crate. See the [wasmgrind-js docs](https://afkoffee.github.io/wasmgrind/wasmgrind-docs-rs/wasmgrind_js/) for further information.

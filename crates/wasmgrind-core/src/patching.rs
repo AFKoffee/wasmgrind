@@ -36,7 +36,7 @@ pub fn threadify(wasm_bytes: &[u8]) -> Result<Vec<u8>, Error> {
 /// Wasabi version](https://github.com/AFKoffee/wasabi.git).
 /// 
 /// For details with regard to the exact instrumentation performed, refer to the
-/// [Wasmgrind Book](https://wasmgrind-d6f2b1.gitlab.io/book/developers_guide/wasmgrind_core/wasm_instrumentation.html).
+/// [Wasmgrind Book](https://afkoffee.github.io/wasmgrind/developers_guide/wasmgrind_core/wasm_instrumentation.html).
 /// 
 /// This function may fail in the following cases:
 /// - The given buffer `wasm_bytes` could not be parsed by Wasabi.

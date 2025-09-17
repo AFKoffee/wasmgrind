@@ -86,7 +86,7 @@ The output of this command should be located under `crates/wasmgrind-js/pkg`. Li
     npm link /path/to/wasmgrind-js/pkg
 
 ### 3. Create an `index.html` and `index.js` to execute Wasmgrind
-Wasmgrind offers a reduced set of API functions on the web compared to native hosts. Refer to the [wasmgrind-js docs](https://wasmgrind-d6f2b1.gitlab.io/docs/wasmgrind_js/) for further information. The following snippets show how to generate and download a simple execution trace with Wasmgrind on the web.
+Wasmgrind offers a reduced set of API functions on the web compared to native hosts. Refer to the [wasmgrind-js docs](https://afkoffee.github.io/wasmgrind/wasmgrind-docs-rs/wasmgrind_js/) for further information. The following snippets show how to generate and download a simple execution trace with Wasmgrind on the web.
 
 As we have specified the `index.js` in our webpack configuration, we have to provide one:
 ```javascript

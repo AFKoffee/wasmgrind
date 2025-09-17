@@ -78,7 +78,7 @@ impl WasmgrindRuntime {
     ///
     /// This method will lock the internal execution trace structure 
     /// iterates over all collected events and creates a binary trace in
-    /// [RapidBin](https://wasmgrind-d6f2b1.gitlab.io/book/developers_guide/race_detection/rapid_bin.html)
+    /// [RapidBin](https://afkoffee.github.io/wasmgrind/developers_guide/race_detection/rapid_bin.html)
     /// format.
     /// 
     /// The excution trace is returned in form of a [`js_sys::Promise`] that wrapps a [`TraceOutput`] object.

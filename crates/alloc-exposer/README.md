@@ -10,7 +10,7 @@ While it can be compiled on platforms other than WebAssembly, this crate is inte
 be used only in binaries that will be compiled to WebAssembly and processed by 
 [`wasm-threadify`] afterwards.
 
-[`wasm-threadify`]: https://wasmgrind-d6f2b1.gitlab.io/docs/wasm_threadify/index.html
+[`wasm-threadify`]: https://afkoffee.github.io/wasmgrind/wasmgrind-docs-rs/wasm_threadify/index.html
 
 ## Third Party Materials
 The following files in this directory (including its subdirectories) contain code by
