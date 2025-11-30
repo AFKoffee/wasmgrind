@@ -1,7 +1,0 @@
-[workspace]
-members = [ 
-    "deadlock-test",
-    "minimal-test",
-    "custom-import"
-]
-resolver = "3"

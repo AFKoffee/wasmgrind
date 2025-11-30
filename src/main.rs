@@ -1,82 +1,143 @@
-use std::{
-    io::{Write, stdin, stdout},
-    path::PathBuf,
-};
+use std::path::PathBuf;
 
 use anyhow::Error;
-use clap::Parser;
-use race_detection::tracing::BinaryTraceOutput;
+use log::{Level, LevelFilter};
+use log4rs::{
+    Config as LogConfig,
+    append::{
+        console::{ConsoleAppender, Target},
+        file::FileAppender,
+    },
+    config::{Appender, Root},
+    encode::pattern::PatternEncoder,
+    filter::threshold::ThresholdFilter,
+};
 
-#[derive(Parser)]
-struct Cli {
-    #[arg(long)]
-    emit_patched: bool,
+use crate::{
+    cli::{Cli, Cmd, ExecCmd},
+    cmd::{ProfilingOptions, RtPhaseMarkers, dump::DumpCmd, run::RunCmd, trace::TraceCmd},
+};
 
-    #[arg(long)]
-    emit_instrumented: bool,
+mod cli;
+mod cmd;
 
-    #[arg(short, long)]
-    interactive: bool,
+fn init_logging(level: Level, dir: Option<PathBuf>) -> Result<(), Error> {
+    let console = ConsoleAppender::builder()
+        .target(Target::Stderr)
+        .encoder(Box::new(PatternEncoder::new("{h({l})} - {m}{n}")))
+        .build();
 
-    #[arg(short, long)]
-    tracing: bool,
+    let mut filter = match level {
+        Level::Error => LevelFilter::Error,
+        Level::Warn => LevelFilter::Warn,
+        Level::Info => LevelFilter::Info,
+        Level::Debug => LevelFilter::Debug,
+        Level::Trace => LevelFilter::Trace,
+    };
 
-    binary: PathBuf,
+    const CONSOLE_APPENDER: &str = "stderr";
+    let mut logconfig = LogConfig::builder().appender(
+        Appender::builder()
+            .filter(Box::new(ThresholdFilter::new(filter)))
+            .build(CONSOLE_APPENDER, Box::new(console)),
+    );
+    let mut rootconfig = Root::builder().appender(CONSOLE_APPENDER);
 
-    function: String,
+    if let Some(dir) = dir {
+        let logfile = FileAppender::builder()
+            .encoder(Box::new(PatternEncoder::new(
+                "{d} {i} {l}{D( {t} {f} {L})} - {m}{n}",
+            )))
+            .build(dir.join("wasmgrind-$TIME{%Y-%m-%d}.log"))?;
+
+        filter = filter.increment_severity();
+
+        const LOGFILE_APPENDER: &str = "logfile";
+        logconfig = logconfig.appender(
+            Appender::builder()
+                .filter(Box::new(ThresholdFilter::new(filter)))
+                .build(LOGFILE_APPENDER, Box::new(logfile)),
+        );
+        rootconfig = rootconfig.appender(LOGFILE_APPENDER)
+    }
+
+    let config = logconfig.build(rootconfig.build(filter))?;
+
+    log4rs::init_config(config)?;
+
+    Ok(())
 }
 
 fn main() -> Result<(), anyhow::Error> {
-    let args = Cli::parse();
+    let args = Cli::args();
 
-    if args.tracing {
-        let runtime = wasmgrind::wasmgrind(args.binary, args.emit_patched, args.emit_instrumented)?;
+    if let Some(level) = args.loglevel() {
+        init_logging(level, args.logdir)?;
+    }
 
-        let runner = runtime.invoke_function::<(), ()>(args.function, ());
-
-        if args.interactive {
-            loop {
-                print!("wasmgrind> ");
-                stdout().flush().unwrap();
-                match stdin().lines().next() {
-                    Some(Ok(input)) => match input.trim() {
-                        "finish" => {
-                            println!("Exited interactive mode.");
-                            break;
-                        }
-                        "save" => {
-                            println!("Saving trace to file ...");
-                            save_trace(runtime.generate_binary_trace()?)?;
-                            println!("... saved sucessfully.");
-                        }
-                        "exit" => {
-                            println!("Terminating ...");
-                            return Ok(());
-                        }
-                        _ => println!("Invalid input. Try again!"),
-                    },
-                    _ => { /* Noop */ }
+    match args.cmd {
+        Cmd::Dump { binary } => DumpCmd { binary }.exec()?,
+        Cmd::Profile { markers, exec_cmd } => {
+            let options = ProfilingOptions {
+                markers: markers.map(RtPhaseMarkers::from),
+                emit_trace: false,
+            };
+            match exec_cmd {
+                ExecCmd::Run { binary, interface } => {
+                    RunCmd {
+                        binary,
+                        interface: interface.into(),
+                    }
+                    .exec_with_options(&options)?;
+                }
+                ExecCmd::Trace {
+                    binary,
+                    cachedir,
+                    emit_instrumented,
+                    outdir,
+                    outfile,
+                    interface,
+                } => {
+                    TraceCmd {
+                        binary,
+                        cachedir,
+                        emit_instrumented,
+                        outdir,
+                        outfile,
+                        interface: interface.into(),
+                    }
+                    .exec_with_options(&options)?;
                 }
             }
         }
-
-        runner.join().expect("Error: Runner Thread panicked!")?;
-        let trace = runtime.generate_binary_trace()?;
-        let overlaps = trace.find_overlaps()?;
-        for overlap in overlaps.get_overlaps() {
-            println!("WARNING: {}", overlap.description())
-        }
-        let (n_overlap_events, n_memory_events) = overlaps.get_overlap_ratio();
-        println!("Overlap Ratio of the Trace (Overlaps / Memory Accesses): {} / {}", n_overlap_events, n_memory_events);
-        save_trace(trace)
-    } else {
-        wasmgrind::run(args.binary, args.function, args.emit_patched)?
-            .join()
-            .expect("Error: Runner Thread panicked!")
+        Cmd::Exec(cmd) => match cmd {
+            ExecCmd::Run { binary, interface } => {
+                RunCmd {
+                    binary,
+                    interface: interface.into(),
+                }
+                .exec()?;
+            }
+            ExecCmd::Trace {
+                binary,
+                cachedir,
+                emit_instrumented,
+                outdir,
+                outfile,
+                interface,
+            } => {
+                TraceCmd {
+                    binary,
+                    cachedir,
+                    emit_instrumented,
+                    outdir,
+                    outfile,
+                    interface: interface.into(),
+                }
+                .exec()?;
+            }
+        },
     }
-}
 
-fn save_trace(output: BinaryTraceOutput) -> Result<(), Error> {
-    std::fs::write("trace.bin", output.trace).map_err(Error::from)?;
-    std::fs::write("trace.json", output.metadata.to_json()?).map_err(Error::from)
+    Ok(())
 }

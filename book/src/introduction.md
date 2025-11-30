@@ -2,6 +2,9 @@
 
 The _Wasmgrind_ project is a collection of various concepts, tools and libraries which interact deeply with low-level concepts of WebAssembly.
 
+> [!CAUTION]
+> Most of the content of this book has been removed during the course of switching to WALI as Wasmgrind's main low-level interface. We may re-add it in the future, but for now this book is just an artifact from the past ...
+
 ## Background
 
 In the _User_ and _Developer Guides_ we assume, that you are familiar with WebAssembly and the analysis of concurrent programs. We recommend reading the following chapters first, depending on your background: 
@@ -11,6 +14,6 @@ In the _User_ and _Developer Guides_ we assume, that you are familiar with WebAs
 
 ## Guides
 
-The [User Guide](./user_guide/getting_started.md) is targeted at users that want to embed Wasmgrind into their projects as a library or want to use the provided packages as in order to run and analyze multithreaded WebAssembly programs.
+The [User Guide]() is targeted at users that want to embed Wasmgrind into their projects as a library or want to use the provided packages as in order to run and analyze multithreaded WebAssembly programs.
 
-If you aim to contribute to Wasmgrind or want to explore the internal concepts of this project the [Developers Guide](./developers_guide/general_concepts.md) will fit your needs.
+If you aim to contribute to Wasmgrind or want to explore the internal concepts of this project the [Developers Guide]() will fit your needs.

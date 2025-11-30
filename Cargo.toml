@@ -1,14 +1,16 @@
 [workspace]
 members = [ 
-    "crates/alloc-exposer", 
-    "crates/race-detection",
-    "crates/wasm-threadify",
-    "crates/wasm-threadlink",
-    "crates/wasmgrind-core", 
-    "crates/wasmgrind-js", 
-    "crates/wasmgrind-error",
-    "crates/wasmgrind-macros",
+    "crates/trace-tools",
+    "crates/wasmgrind-core",
+    "crates/wasmtime-wali",
 ]
+
+[workspace.dependencies]
+wasmtime = "38.0.3"
+anyhow = "1.0.98"
+walrus = "0.23.3"
+log = "0.4.28"
+log4rs = "1.4.0"
 
 [package]
 name = "wasmgrind"
@@ -17,14 +19,25 @@ authors = ["Michael Staab <afkoffee@protonmail.com>"]
 license = "MIT or Apache-2.0"
 edition = "2024"
 
+[profile.release]
+#lto = "thin"            # Enable link-time optimization
+#codegen-units = 1       # Better optimization (slower compile)
+
+[profile.profiling]
+inherits = "release"
+debug = true            # Full debug info for symbols
+strip = false           # Don't strip symbols
+
 [dependencies]
-anyhow = "1.0.98"
-race-detection = { path = "crates/race-detection" }
+anyhow = { workspace = true }
 wasmgrind-core = { path = "crates/wasmgrind-core" }
-wasmgrind-error = { path = "crates/wasmgrind-error" }
-wasmgrind-macros = { path = "crates/wasmgrind-macros" }
-wasmtime = "33.0.0"
+wasmtime-wali = { path = "crates/wasmtime-wali" }
+wasmtime = { workspace = true }
 clap = { version = "4.5.38", features = ["derive"] }
+walrus = { workspace = true }
+wasmprinter = "0.241.2"
+log4rs = { workspace = true }
+log = { workspace = true }
 
 [dev-dependencies]
 tempfile = "3.20.0"

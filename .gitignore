@@ -1,2 +1,5 @@
 /target
 /tmp
+.vscode/
+/log
+/.wasmgrind-cache

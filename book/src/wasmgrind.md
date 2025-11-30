@@ -10,13 +10,10 @@ However, at the time of this writing there is no standardized way of creating an
 
 ## The Core Features of Wasmgrind
 
-Wasmgrind tries to fullfill the above needs by providing three mostly independent core utilities.
+Wasmgrind tries to fullfill the above needs by providing two mostly independent core utilities.
 
-### Defining an Embedder-Agnostic Runtime API
-Defining an API that allows for thread management from within WebAssembly is the foundation for Wasmgrind. It allows for arbitrary projects to be used with Wasmgrind as long as the resulting binaries implement the provided runtime interface.
-
-### Providing Embedder-Specific Runtime Environments
-Because the runtime API is embedder-agnostic, various runtimes can be adapted to provide the required functionality to implement the runtime API. For browser engines, the custom runtime environment needs to utilize JavaScript in combination with WebWorkers, whereas for native runtimes, the environment is able to use os-threads.
+### Execution of Multithreaded WebAssembly Programs
+Currently, Wasmgrind implements a subset of the WebAssembly Linux Interface (WALI) to enable execution of various multithreaded programs that have been compiled using the [WALI Toolchain](https://github.com/arjunr2/WALI).
 
 ### Creation of Execution Traces
-In order to identify common concurrency bugs like dataraces or deadlocks, Wasmgrind offers the ability to record important events like operations on mutexes, creation and joining of threads as well as memory accesses during program execution for offline analysis. To this end, Wasmgrind uses binary instrumentation to patch the binary before execution.
+In order to identify common concurrency bugs like dataraces or deadlocks, Wasmgrind offers the ability to record important events like operations on mutexes, creation and joining of threads as well as memory accesses during program execution for offline analysis. It uses binary instrumentation to patch the binary before execution.

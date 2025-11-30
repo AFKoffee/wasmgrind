@@ -1,0 +1,15 @@
+[package]
+name = "trace-tools"
+version = "0.1.0"
+authors = ["Michael Staab <afkoffee@protonmail.com>"]
+license = "MIT or Apache-2.0"
+edition = "2024"
+
+[dependencies]
+anyhow = { workspace = true }
+log = { workspace = true }
+clap = { version = "4.5.40", features = ["derive"] }
+
+[dev-dependencies]
+rand_xoshiro = "0.7.0"
+tempfile = "3.20.0"

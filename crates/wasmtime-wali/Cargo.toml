@@ -1,0 +1,15 @@
+[package]
+name = "wasmtime-wali"
+version = "0.1.0"
+authors = ["Michael Staab <afkoffee@protonmail.com>"]
+license = "MIT or Apache-2.0"
+edition = "2024"
+
+[dependencies]
+anyhow = { workspace = true }
+libc = "0.2.177"
+log = { workspace = true }
+nc = "0.9.6"
+rustix = "1.1.2"
+walrus = { workspace = true }
+wasmtime = { workspace = true }
