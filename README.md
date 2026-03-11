@@ -14,7 +14,7 @@ The ultimate goal of this tool is to enable the analysis of concurrent WebAssemb
 Otherwise, install it: https://www.rust-lang.org/tools/install
 
 ## Quick Start Guide
-The following sections describe how to get up and running with wasmgrind quickly. For more in-depth explainations refer to the [Wasmgrind Book](https://afkoffee.github.io/wasmgrind/).
+The following sections describe how to get up and running with wasmgrind quickly. For more in-depth explainations refer to the [Wasmgrind Book](https://wasmgrind-d6f2b1.gitlab.io/).
 
 ### Compiling Binaries for Wasmgrind
 Currently, the only supported way of compiling binaries for Wasmgrind is to use the WALI toolchain. View the [WALI repository](https://github.com/arjunr2/WALI) for more details.

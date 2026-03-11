@@ -1,5 +1,5 @@
 # The Docker image that will be used to build your app
-image: rust:1.86
+image: rust:1.94
 create-pages:
   pages:
     # The folder that contains the files to be exposed at the Page URL
@@ -18,10 +18,10 @@ create-pages:
   # Functions that should be executed before the build script is run
   before_script:
     - mkdir public
-    - cargo install mdbook
+    - cargo install mdbook --version 0.5.2
     - cargo build --workspace --release
   script:
     - cargo doc --workspace --release
-    - mv target/doc public/docs
+    - mv target/doc public/wasmgrind-docs-rs
     - cd book
-    - mdbook build -d ../public/book
+    - mdbook build -d ../public
