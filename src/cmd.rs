@@ -110,8 +110,10 @@ where
     Params: WasmParams,
     Results: WasmResults,
 {
-    log::warn!("The Wasmgrind Standalone interface is outdated and untested. Prepare for runtime errors!");
-    
+    log::warn!(
+        "The Wasmgrind Standalone interface is outdated and untested. Prepare for runtime errors!"
+    );
+
     let main_tid = ctx.ctx().next_available_tid();
     let mut store = Store::new(provider.engine(), ctx);
     provider.add_to_linker(&mut linker, &store)?;

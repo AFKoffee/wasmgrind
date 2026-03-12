@@ -29,7 +29,7 @@ pub fn wali_proc_exit<T: WaliView>(caller: Caller<'_, T>, status: i32) -> Error 
     }
 
     wali_ctx.0.proc_exit_code.store(status, Ordering::Release);
-    
+
     wali_ctx.0.proc_exit_invoked.store(true, Ordering::Release);
 
     // NOTE:
