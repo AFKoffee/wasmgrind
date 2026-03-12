@@ -21,7 +21,8 @@ create-pages:
     - cargo install mdbook --version 0.5.2
     - cargo build --workspace --release
   script:
-    - cargo doc --workspace --release
-    - mv target/doc public/wasmgrind-docs-rs
     - cd book
     - mdbook build -d ../public
+    - cd ..
+    - cargo doc --workspace --release
+    - mv target/doc public/wasmgrind-docs-rs
