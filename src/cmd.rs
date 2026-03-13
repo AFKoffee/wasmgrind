@@ -30,10 +30,10 @@ pub enum RtPhaseMarkers {
 }
 
 impl RtPhaseMarkers {
-    fn now_ns() -> u128 {
+    pub fn timer() -> &'static Instant {
         static START: OnceLock<Instant> = OnceLock::new();
 
-        START.get_or_init(Instant::now).elapsed().as_nanos()
+        START.get_or_init(Instant::now)
     }
 
     fn emit_marker(&self, name: &str) -> Result<(), Error> {
@@ -44,7 +44,11 @@ impl RtPhaseMarkers {
         std::sync::atomic::compiler_fence(Ordering::SeqCst);
 
         let mut out = stdout().lock();
-        writeln!(out, "@@WASMGRIND:{name}:{}ns@@", RtPhaseMarkers::now_ns())?;
+        writeln!(
+            out,
+            "@@WASMGRIND:{name}:{}ns@@",
+            RtPhaseMarkers::timer().elapsed().as_nanos()
+        )?;
         out.flush()?;
 
         std::sync::atomic::compiler_fence(Ordering::SeqCst);

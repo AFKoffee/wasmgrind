@@ -78,8 +78,13 @@ fn main() -> Result<(), anyhow::Error> {
     match args.cmd {
         Cmd::Dump { binary } => DumpCmd { binary }.exec()?,
         Cmd::Profile { markers, exec_cmd } => {
+            let markers = markers.map(|marker_option| {
+                // Start phase marker timer
+                RtPhaseMarkers::timer();
+                RtPhaseMarkers::from(marker_option)
+            });
             let options = ProfilingOptions {
-                markers: markers.map(RtPhaseMarkers::from),
+                markers,
                 emit_trace: false,
             };
             match exec_cmd {
