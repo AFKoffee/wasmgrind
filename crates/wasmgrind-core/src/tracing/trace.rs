@@ -54,7 +54,7 @@ impl Trace {
     }
 
     pub fn append_event(&self, event: Event) -> EventHandle {
-        let event_id = self.next_event_id.fetch_add(1, atomic::Ordering::Relaxed);
+        let event_id = 0; // self.next_event_id.fetch_add(1, atomic::Ordering::Relaxed);
         let record = EventRecord {
             id: event_id,
             event,
